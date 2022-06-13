@@ -19,6 +19,7 @@ from __future__ import print_function
 import argparse
 import pickle
 import io
+import sys
 
 #generate string for one entry of the dictionary
 def generateEntry(word,entry,sphinx_format=False):
@@ -56,17 +57,33 @@ if __name__ == '__main__':
     with io.open(args.outfile,'w',encoding='utf-8') as outfile:
         if '%' in combinedDict:
             combinedDict['<UNK>'] = combinedDict['%']
-            print('<UNK> is:', combinedDict['<UNK>'])
+            print('<UNK> is:', combinedDict['<UNK>'], 'This entry should not be here. Please remove manually.')
+            sys.exit(1)
             #del combinedDict['%']
         else:
             print('Warning!: No % entry found! Will add <UNK> -> usb mapping manually.')
-            combinedDict['<UNK>'] = [{'pron': ['usb'], 'freq': 100, 'manual': True}]
+            combinedDict['<UNK>'] = [{'pron': ['spn'], 'freq': 100, 'manual': True}]
 
-        if '<Lachen>' not in combinedDict:
-            print('Warning!: No <Lachen> entry found! Will add <Lachen> -> lau mapping manually.')
-            combinedDict['<Lachen>'] = [{'pron': ['lau'], 'freq': 100, 'manual': True}]
+        if '<Lachen>' in combinedDict:
+            print('<Lachen> is:', combinedDict['<Lachen>'], 'This entry should not be here. Please remove manually.')
+            sys.exit(1)
+
+        if '<LAUGHTER>' not in combinedDict:
+            print('Warning!: No <LAUGHTER> entry found! Will add <LAUGHTER> -> lau mapping manually.')
+            combinedDict['<LAUGHTER>'] = [{'pron': ['lau'], 'freq': 100, 'manual': True}]
+
+        if '!SIL' not in combinedDict:
+            print('Warning!: No !SIL entry found! Will add !SIL -> sil mapping manually.')
+            combinedDict['!SIL'] = [{'pron': ['sil'], 'freq': 100, 'manual': True}]
+        
+        if '<SPOKEN_NOISE>' not in combinedDict:
+            print('Warning!: No <SPOKEN_NOISE> entry found! Will add <SPOKEN_NOISE> -> spn mapping manually.')
+            combinedDict['<SPOKEN_NOISE>'] = [{'pron': ['spn'], 'freq': 100, 'manual': True}]
+
+        if '<NOISE>' not in combinedDict:
+            print('Warning!: No <NOISE> entry found! Will add <NOISE> -> nsn mapping manually.')
+            combinedDict['<NOISE>'] = [{'pron': ['nsn'], 'freq': 100, 'manual': True}]
 
         for key in sorted(list(combinedDict.keys())):
             txt = generateEntry(key,combinedDict[key],args.sphinx_format)
             outfile.write(txt)
-

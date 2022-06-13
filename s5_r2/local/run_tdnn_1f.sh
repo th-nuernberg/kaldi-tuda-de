@@ -51,12 +51,18 @@ l2_regularize=0.00005
 proportional_shrink=20
 num_hidden=2048
 num_epochs=5
+with_specaugment=true
+# Only for training with specaugment
+ivector_affine_opts="l2-regularize=0.03"
 
 lang_dir=data/lang_std_big_v6
 
 #lang_dir=data/lang_std_small_test
 
 tdnn_affix=1f_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
+if [ "$with_specaugment" = true ]
+  tdnn_affix=${tdnn_affix}_specaug
+fi
 
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging
@@ -152,6 +158,60 @@ if [ $stage -le 17 ]; then
   learning_rate_factor=$(echo "print(0.5/$xent_regularize)" | python3)
 
   mkdir -p $dir/configs
+
+  if [ "$with_specaugment" = true ]; then
+
+  cat <<EOF > $dir/configs/network.xconfig
+  input dim=100 name=ivector
+  input dim=40 name=input
+
+  # please note that it is important to have input layer with the name=input
+  # as the layer immediately preceding the fixed-affine-layer to enable
+  # the use of short notation for the descriptor
+  # fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+
+  ############## SPECAUGMENT STARTS HERE ################################# 
+  # this takes the MFCCs and generates filterbank coefficients.  The MFCCs
+  # are more compressible so we prefer to dump the MFCCs to disk rather
+  # than filterbanks.
+  idct-layer name=idct input=input dim=40 cepstral-lifter=22 affine-transform-file=$dir/configs/idct.mat
+
+  linear-component name=ivector-linear $ivector_affine_opts dim=200 input=ReplaceIndex(ivector, t, 0)
+  batchnorm-component name=ivector-batchnorm target-rms=0.025
+  batchnorm-component name=idct-batchnorm input=idct
+  spec-augment-layer name=idct-spec-augment freq-max-proportion=0.5 time-zeroed-proportion=0.2 time-mask-max-frames=20
+  combine-feature-maps-layer name=combine_inputs input=Append(idct-spec-augment, ivector-batchnorm) num-filters1=1 num-filters2=5 height=40
+  ############## SPECAUGMENT ENDS HERE ###################################
+
+
+  # the first splicing is moved before the lda layer, so no splicing here
+  relu-batchnorm-layer name=tdnn1 dim=$num_hidden self-repair-scale=1.0e-04
+  relu-batchnorm-layer name=tdnn2 input=Append(-1,0,1) dim=$num_hidden
+  relu-batchnorm-layer name=tdnn3 input=Append(-1,0,1,2) dim=$num_hidden
+  relu-batchnorm-layer name=tdnn4 input=Append(-3,0,3) dim=$num_hidden
+  relu-batchnorm-layer name=tdnn5 input=Append(-3,0,3) dim=$num_hidden
+  relu-batchnorm-layer name=tdnn6 input=Append(-6,-3,0) dim=$num_hidden
+
+  ## adding the layers for chain branch
+  relu-batchnorm-layer name=prefinal-chain input=tdnn6 dim=$num_hidden target-rms=0.5
+  output-layer name=output include-log-softmax=false dim=$num_targets max-change=1.5
+
+  # adding the layers for xent branch
+  # This block prints the configs for a separate output that will be
+  # trained with a cross-entropy objective in the 'chain' models... this
+  # has the effect of regularizing the hidden parts of the model.  we use
+  # 0.5 / args.xent_regularize as the learning rate factor- the factor of
+  # 0.5 / args.xent_regularize is suitable as it means the xent
+  # final-layer learns at a rate independent of the regularization
+  # constant; and the 0.5 was tuned so as to make the relative progress
+  # similar in the xent and regular final layers.
+  relu-batchnorm-layer name=prefinal-xent input=tdnn6 dim=$num_hidden target-rms=0.5
+  output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
+
+EOF
+
+  else
+
   cat <<EOF > $dir/configs/network.xconfig
   input dim=100 name=ivector
   input dim=40 name=input
@@ -186,6 +246,10 @@ if [ $stage -le 17 ]; then
   output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
 
 EOF
+
+  fi
+
+
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
 
 fi

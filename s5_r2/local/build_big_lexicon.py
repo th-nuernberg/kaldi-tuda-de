@@ -41,7 +41,7 @@ BAS_German_set ={
     'consonants_and_stops' : ['ts','z', 'S', 'Z', 'C', 'x', 'N', 'b', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'r', 's', 't', 'v', '?', 'R','T'], #R and T are english phonemes, maybe they should also be mapped to their closesed German representations (?)
 # Note we use ? as glottal stop, some BAS dictionaries use Q instead. Compare e.g. "Anfang" in Mary and BAS.
     'ignore' : ['#','+','-',','],
-    'silence' : ['usb', 'lau'] # lau is a phone for laughter (newly added)
+    'silence' : ['sil', 'spn', 'nsn', 'lau'] # lau is a phone for laughter (newly added)
     }
 
 BAS_German_set['items'] = BAS_German_set['nasal_vowels']+BAS_German_set['diphtongs']+BAS_German_set['unstressed_vowels']+BAS_German_set['vowels']+BAS_German_set['consonants_and_stops']
@@ -401,10 +401,12 @@ if __name__ == '__main__':
 
     print('writing to', args.export_dir + 'silence_phones.txt')
     with open(args.export_dir + 'silence_phones.txt','w') as silence_phones:
+        # write 'sil', 'spn', 'nsn', 'lau'
         silence_phones.write('\n'.join(BAS_German_set['silence'])+'\n')
 
     print('writing to', args.export_dir + 'optional_silence.txt')
     with open(args.export_dir + 'optional_silence.txt','w') as silence_phones:
+        # write 'sil'
         silence_phones.write(BAS_German_set['silence'][0]+'\n')
 
     print('writing to', args.export_dir + 'extra_questions.txt')
