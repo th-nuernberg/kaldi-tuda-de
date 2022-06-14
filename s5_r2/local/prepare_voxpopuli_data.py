@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# Copyright 2019 Language Technology, Universitaet Hamburg (author: Benjamin Milde)
 # Copyright 2022 Informatik, Technische Hochschule Nuernberg (author: Thomas Ranzenberger)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,7 @@ import argparse
 import common_utils
 import german_asr_lm_tools.normalize_sentences as normalize_sentences
 import spacy
-import re
+import os
 
 
 wav_scp_template = "sox $filepath -t wav -r 16k -b 16 -e signed - |"
@@ -36,7 +37,11 @@ def process(corpus_path, input_filename, language, output_datadir):
 
     print('Loading', corpus_path + 'transcribed_data/' + language + '/' + input_filename)
     with open(corpus_path + 'transcribed_data/' + language + '/' + input_filename) as corpus_path_in:
-        for line in corpus_path_in:
+        # Skip first line which contains the header of the tsv file
+        itercorpus_path_in = iter(corpus_path_in)
+        next(itercorpus_path_in)
+        # Iterate over tsv file by line
+        for line in itercorpus_path_in:
             split = line.split('\t')
             # print(split)
 
@@ -61,7 +66,14 @@ def process(corpus_path, input_filename, language, output_datadir):
 
             # print(myid, filename, normalized_text, spk, gndr)
 
-            corpus[myid] = (filename, normalized_text, spk, gndr)
+            # Validate that the file really exists
+            full_file_path = corpus_path + 'transcribed_data/' + language + '/' + filename
+            if os.path.isfile(full_file_path):
+                # Add file to output structure
+                corpus[myid] = (filename, normalized_text, spk, gndr)
+            else:
+                print("File does not exist! Skipping " + full_file_path)
+                print("Metadata: ", myid, filename, normalized_text, spk, gndr)
 
     print('done loading ' + input_filename + '!')
     print('Now writing out to', output_datadir,'in Kaldi format!')
