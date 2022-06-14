@@ -230,9 +230,9 @@ if [ $stage -le 1 ]; then
         cd local/
         git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
         cd ..
+        cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       fi
       # make data directory data/commonvoice_train
-      cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       python3 local/prepare_commonvoice_data.py
     fi
   fi
@@ -260,11 +260,12 @@ if [ $stage -le 1 ]; then
       # audio segments in data/wav/vp_temp/transcribed_data/de/[year]/[segment_id].ogg
       # per-split manifest (ID, transcript, speaker ID) data/wav/vp_temp/transcribed_data/de/asr_[split].tsv
       python3 -m voxpopuli.get_asr_data --root ./../data/wav/vp_temp/ --lang de
-      # download lm data
+      # download lm data (not required)
       # sentences data/wav/vp_temp/lm_data/de/sentences.txt
       # vocabulary data/wav/vp_temp/lm_data/de/vocabulary.txt
-      python3 -m voxpopuli.get_lm_data --root ./../data/wav/vp_temp/ --lang de
+      #python3 -m voxpopuli.get_lm_data --root ./../data/wav/vp_temp/ --lang de
       cd ..
+
       cd data/wav
       mv vp_temp/ vp/
       cd ../../
@@ -279,10 +280,16 @@ if [ $stage -le 1 ]; then
         cd local/
         git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
         cd ..
+        cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       fi
-      # make data directory data/voxpopuli_train
-      cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
-      python3 local/prepare_voxpopuli_data.py
+      # process dev and test for decoding tests
+      # create data directory data/voxpopuli_dev
+      python3 local/prepare_voxpopuli_data.py -c "data/wav/vp/" -f "asr_dev.tsv" -o "data/voxpopuli_dev/" --lang de
+      # create data directory data/voxpopuli_dev
+      python3 local/prepare_voxpopuli_data.py -c "data/wav/vp/" -f "asr_test.tsv" -o "data/voxpopuli_test/" --lang de
+      # process train for training
+      # create data directory data/voxpopuli_train
+      python3 local/prepare_voxpopuli_data.py -c "data/wav/vp/" -f "asr_train.tsv" -o "data/voxpopuli_train/" --lang de
     fi
   fi
 fi
