@@ -35,7 +35,7 @@ def process(corpus_path, input_filename, language, output_datadir):
     # we first load the entire corpus text into memory, sort by ID and then write it out into Kaldis data_dir format
     corpus = {}
     # speaker2gender
-    s2g = {}
+    #s2g = {}
 
     print('Loading', corpus_path + 'transcribed_data/' + language + '/' + input_filename)
     with open(corpus_path + 'transcribed_data/' + language + '/' + input_filename) as corpus_path_in:
