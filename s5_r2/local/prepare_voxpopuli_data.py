@@ -34,6 +34,8 @@ def process(corpus_path, input_filename, language, output_datadir):
 
     # we first load the entire corpus text into memory, sort by ID and then write it out into Kaldis data_dir format
     corpus = {}
+    # speaker2gender
+    s2g = {}
 
     print('Loading', corpus_path + 'transcribed_data/' + language + '/' + input_filename)
     with open(corpus_path + 'transcribed_data/' + language + '/' + input_filename) as corpus_path_in:
@@ -49,11 +51,10 @@ def process(corpus_path, input_filename, language, output_datadir):
             myid = split[0]
             # normalized_text
             text = split[2]
-            # speaker_id with prefix
-            spk = 'voxpopuli-' + split[3]
             # gender
             gndr = split[5].replace("male", "m").replace("female", "f").replace("fem", "f")
-
+            # speaker_id with prefix
+            spk = 'voxpopuli-' + split[3]
             # 2018
             subfolder = myid[0:4]
             # 2018/20180313-0900-PLENARY-16-de_20180313-20:08:11_1.ogg
@@ -71,6 +72,13 @@ def process(corpus_path, input_filename, language, output_datadir):
             if os.path.isfile(full_file_path):
                 # Add file to output structure
                 corpus[myid] = (filename, normalized_text, spk, gndr)
+                #if s2g.get(spk) == None:
+                #    s2g[spk] = gndr
+                #else:
+                #    if s2g[spk] != gndr:
+                #        print('Error: Speaker ' + spk + ' has two genders in the dataset!')
+                #        print(s2g[spk])
+                #        print(gndr)
             else:
                 print("File does not exist! Skipping " + full_file_path)
                 print("Metadata: ", myid, filename, normalized_text, spk, gndr)
@@ -78,15 +86,18 @@ def process(corpus_path, input_filename, language, output_datadir):
     print('done loading ' + input_filename + '!')
     print('Now writing out to', output_datadir,'in Kaldi format!')
 
-    with open(output_datadir + 'spk2gender', 'w') as spk2gender, open(output_datadir + 'wav.scp', 'w') as wav_scp, open(output_datadir + 'utt2spk', 'w') as utt2spk, open(output_datadir + 'text', 'w') as text_out:
+    with open(output_datadir + 'wav.scp', 'w') as wav_scp, open(output_datadir + 'utt2spk', 'w') as utt2spk, open(output_datadir + 'text', 'w') as text_out:
         for myid in sorted(corpus.keys()):
             fullid = myid
             filename, normalized_text, spk, gndr = corpus[myid]
 
-            spk2gender.write(fullid + ' ' + gndr + '\n')
             wav_scp.write(fullid + ' ' + wav_scp_template.replace("$filepath", corpus_path + 'transcribed_data/' + language + '/' + filename) + '\n')
             utt2spk.write(fullid + ' ' + spk + '\n')
             text_out.write(fullid + ' ' + normalized_text + '\n')
+
+    #with open(output_datadir + 'spk2gender', 'w') as spk2gender:
+    #    for spk in sorted(s2g.keys()):
+    #        spk2gender.write(spk + ' ' + s2g[spk] + '\n')
 
     print('done!')
 
