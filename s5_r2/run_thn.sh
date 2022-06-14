@@ -26,6 +26,7 @@ use_BAS_dictionaries=false
 add_swc_data=true
 add_mailabs_data=true
 add_commonvoice_data=true
+add_voxpopuli_data=true
 
 # Turn on/off modifications to the original script
 fix_dict_dir=true
@@ -223,13 +224,65 @@ if [ $stage -le 1 ]; then
     if [ ! -d data/commonvoice_train ]
     then
       # download spacy de_core_news_lg model
-      python3 -m spacy download de_core_news_lg
-      cd local/
-      git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
-      cd ..
+      if [ ! -d local/german_asr_lm_tools ]
+      then
+        python3 -m spacy download de_core_news_lg
+        cd local/
+        git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
+        cd ..
+      fi
       # make data directory data/commonvoice_train
       cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       python3 local/prepare_commonvoice_data.py
+    fi
+  fi
+
+  if [ "$add_voxpopuli_data" = true ]
+  then
+    if [ ! -d data/wav/vp/ ]
+    then
+      if [ -d data/wav/vp/ ]
+      then
+        rm -r data/wav/vp_temp/
+      fi
+      mkdir -p data/wav/vp_temp/
+
+      # download voxpopuli
+      git clone https://github.com/facebookresearch/voxpopuli.git voxpopuli
+
+      cd voxpopuli
+      # install python modules
+      pip3 install -r requirements.txt
+      pip3 install numpy
+      # download audio to data/wav/vp_temp/raw_audios/original/[year]/[recording_id].ogg
+      python3 -m voxpopuli.download_audios --root ./../data/wav/vp_temp/ --subset asr
+      # download segmented audio
+      # audio segments in data/wav/vp_temp/transcribed_data/de/[year]/[segment_id].ogg
+      # per-split manifest (ID, transcript, speaker ID) data/wav/vp_temp/transcribed_data/de/asr_[split].tsv
+      python3 -m voxpopuli.get_asr_data --root ./../data/wav/vp_temp/ --lang de
+      # download lm data
+      # sentences data/wav/vp_temp/lm_data/de/sentences.txt
+      # vocabulary data/wav/vp_temp/lm_data/de/vocabulary.txt
+      python3 -m voxpopuli.get_lm_data --root ./../data/wav/vp_temp/ --lang de
+      cd ..
+      cd data/wav
+      mv vp_temp/ vp/
+      cd ../../
+    fi
+    if [ ! -d data/voxpopuli_train ]
+    then
+      # download spacy de_core_news_lg model
+      if [ ! -d local/german_asr_lm_tools ]
+      then
+        pip3 install spacy
+        python3 -m spacy download de_core_news_lg
+        cd local/
+        git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
+        cd ..
+      fi
+      # make data directory data/voxpopuli_train
+      cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
+      python3 local/prepare_voxpopuli_data.py
     fi
   fi
 fi
@@ -372,6 +425,11 @@ if [ $stage -le 6 ]; then
       cat data/commonvoice_train/text >> ${g2p_dir}/complete_text
     fi
 
+    if [ "$add_voxpopuli_data" = true ] ; then
+      python3 local/renormalize_datadir_text.py -t data/voxpopuli_train/text
+      cat data/voxpopuli_train/text >> ${g2p_dir}/complete_text
+    fi
+
     if [ "$add_extra_data" = true ] ; then
       python3 local/renormalize_datadir_text.py -t data/extra_train/text
       cat data/extra_train/text >> ${g2p_dir}/complete_text
@@ -497,7 +555,7 @@ if [ $stage -le 8 ]; then
 
 	if [ "$add_commonvoice_data" = true ] ; then
 		mv data/train data/train_without_commonvoice || true
-        	echo "Now computing MFCC features for m_ailabs_train"
+        	echo "Now computing MFCC features for commonvoice_train"
         	# Now make MFCC features.
         	x=commonvoice_train
         	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
@@ -508,6 +566,21 @@ if [ $stage -le 8 ]; then
 
 		echo "Done, now combining data (train commonvoice_train)."
 		./utils/combine_data.sh data/train data/train_without_commonvoice data/commonvoice_train
+	fi
+
+	if [ "$add_voxpopuli_data" = true ] ; then
+		mv data/train data/train_without_voxpopuli || true
+        	echo "Now computing MFCC features for voxpopuli_train"
+        	# Now make MFCC features.
+        	x=voxpopuli_train
+        	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+        	steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+        	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+        	steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+        	utils/fix_data_dir.sh data/$x
+
+		echo "Done, now combining data (train voxpopuli_train)."
+		./utils/combine_data.sh data/train data/train_without_voxpopuli data/voxpopuli_train
 	fi
 
 	if [ "$add_extra_data" = true ] ; then
