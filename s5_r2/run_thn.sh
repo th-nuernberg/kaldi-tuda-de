@@ -251,9 +251,6 @@ if [ $stage -le 1 ]; then
       git clone https://github.com/facebookresearch/voxpopuli.git voxpopuli
 
       cd voxpopuli
-      # install python modules
-      pip3 install -r requirements.txt
-      pip3 install numpy
       # download audio to data/wav/vp_temp/raw_audios/original/[year]/[recording_id].ogg
       python3 -m voxpopuli.download_audios --root ./../data/wav/vp_temp/ --subset asr
       # download segmented audio
@@ -275,7 +272,6 @@ if [ $stage -le 1 ]; then
       # download spacy de_core_news_lg model
       if [ ! -d local/german_asr_lm_tools ]
       then
-        pip3 install spacy
         python3 -m spacy download de_core_news_lg
         cd local/
         git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools

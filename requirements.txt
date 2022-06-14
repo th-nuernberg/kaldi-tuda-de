@@ -1,0 +1,11 @@
+# Main
+beautifulsoup4
+lxml
+spacy
+# VoxPopuli
+numpy
+tqdm
+torchaudio
+num2words
+edlib
+editdistance

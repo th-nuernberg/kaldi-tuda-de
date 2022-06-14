@@ -186,13 +186,13 @@ Now follow the displayed instructions to install OpenBLAS headers and libs to a 
 
 You also need Sequitur G2P (https://www-i6.informatik.rwth-aachen.de/web/Software/g2p.html, https://github.com/sequitur-g2p/sequitur-g2p). Download the package and run make, then edit the sequitur\_g2p variable in s5\_r2/cmd.sh to point to the g2p.py script.  
 
-You will also need a recent version of Python 3. Package requirements are:
+You will also need a recent version of Python 3. Install the package requirements from `requirements.txt` and install the required NLP resources:
 
-```
-pip3 install beautifulsoup4 lxml spacy && python -m spacy download de_core_news_lg
+``` bash
+pip3 install -r requirements.txt && python -m spacy download de_core_news_lg
 ```
 
-Additinally, the requests package was previously used to communicate with MaryTTS to generate phonemizations, however you won't need it if you run the standard setup.
+Additionally, the requests package was previously used to communicate with MaryTTS to generate phonemizations, however you won't need it if you run the standard setup.
 
 ## Get LM text data
 
