@@ -28,7 +28,7 @@ def process(corpus_path, input_filename, language, output_datadir):
     common_utils.make_sure_path_exists(output_datadir)
     nlp = spacy.load('de_core_news_lg')
 
-    # Common voice has repetitions and the text is not normalized
+    # VoxPopuli might have repetitions so we normalize it again
     # we cache text normalizations since they can be slow
     normalize_cache = {}
 
