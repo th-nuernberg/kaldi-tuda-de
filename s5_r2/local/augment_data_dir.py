@@ -298,7 +298,8 @@ def main():
                 num_bg_noises)
         except KeyError:
             files_with_errors += 1
-            new_wav = augment_wav_full(wav, fg_snrs, bg_snrs, fg_noise_utts, bg_noise_utts, noise_wavs, num_bg_noises)
+            new_wav = wav
+            # new_wav = augment_wav_full(wav, fg_snrs, bg_snrs, fg_noise_utts, bg_noise_utts, noise_wavs, num_bg_noises)
 
         new_utt = get_new_id(utt, args.utt_modifier_type, args.utt_modifier)
 

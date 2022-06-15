@@ -352,20 +352,20 @@ def generate_reverberated_wav_scp(wav_scp,  # a dictionary whose values are the 
             try:
                 speech_dur = durations[recording_id]
                 max_noises_recording = math.floor(max_noises_per_minute * speech_dur / 60)
+                reverberate_opts = generate_reverberation_opts(room_dict,  # the room dictionary, please refer to make_room_dict() for the format
+                                                pointsource_noise_list, # the point source noise list
+                                                iso_noise_dict, # the isotropic noise dictionary
+                                                foreground_snrs, # the SNR for adding the foreground noises
+                                                background_snrs, # the SNR for adding the background noises
+                                                speech_rvb_probability, # Probability of reverberating a speech signal
+                                                isotropic_noise_addition_probability, # Probability of adding isotropic noises
+                                                pointsource_noise_addition_probability, # Probability of adding point-source noises
+                                                speech_dur,  # duration of the recording
+                                                max_noises_recording  # Maximum number of point-source noises that can be added
+                                                )
             except KeyError:
-                speech_dur = 0
-                max_noises_recording = 1
-            reverberate_opts = generate_reverberation_opts(room_dict,  # the room dictionary, please refer to make_room_dict() for the format
-                                                         pointsource_noise_list, # the point source noise list
-                                                         iso_noise_dict, # the isotropic noise dictionary
-                                                         foreground_snrs, # the SNR for adding the foreground noises
-                                                         background_snrs, # the SNR for adding the background noises
-                                                         speech_rvb_probability, # Probability of reverberating a speech signal
-                                                         isotropic_noise_addition_probability, # Probability of adding isotropic noises
-                                                         pointsource_noise_addition_probability, # Probability of adding point-source noises
-                                                         speech_dur,  # duration of the recording
-                                                         max_noises_recording  # Maximum number of point-source noises that can be added
-                                                         )
+                    reverberate_opts == ""
+
 
             # prefix using index 0 is reserved for original data e.g. rvb0_swb0035 corresponds to the swb0035 recording in original data
             if reverberate_opts == "" or i == 0:

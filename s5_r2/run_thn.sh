@@ -21,7 +21,7 @@
 # -e 'error', -u 'undefined variable', -o pipefail 'error in pipeline',
 set -euxo pipefail
 
-stage=9
+stage=1
 use_BAS_dictionaries=false
 add_swc_data=true
 add_mailabs_data=true
@@ -248,15 +248,18 @@ if [ $stage -le 1 ]; then
       mkdir -p data/wav/vp_temp/
 
       # download voxpopuli
-      git clone https://github.com/facebookresearch/voxpopuli.git voxpopuli
-
+      if [ ! -d voxpopuli ]
+      then
+        git clone https://github.com/facebookresearch/voxpopuli.git voxpopuli
+      fi
       cd voxpopuli
       # download audio to data/wav/vp_temp/raw_audios/original/[year]/[recording_id].ogg
-      python3 -m voxpopuli.download_audios --root ./../data/wav/vp_temp/ --subset asr
+      python3 -m voxpopuli.download_audios --root ../data/wav/vp_temp/ --subset de
+      python3 -m voxpopuli.download_audios --root ../data/wav/vp_temp/ --subset de_v2
       # download segmented audio
       # audio segments in data/wav/vp_temp/transcribed_data/de/[year]/[segment_id].ogg
       # per-split manifest (ID, transcript, speaker ID) data/wav/vp_temp/transcribed_data/de/asr_[split].tsv
-      python3 -m voxpopuli.get_asr_data --root ./../data/wav/vp_temp/ --lang de
+      python3 -m voxpopuli.get_asr_data --root ../data/wav/vp_temp/ --lang de
       # download lm data (not required)
       # sentences data/wav/vp_temp/lm_data/de/sentences.txt
       # vocabulary data/wav/vp_temp/lm_data/de/vocabulary.txt
@@ -622,12 +625,8 @@ if [ $stage -le 9 ]; then
       steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/augment/train_aug_1m $mfccdir
       # Combine the clean and augmented list.  This is now roughly
       # double the size of the original clean list.
-      utils/combine_data.sh data/train_augment data/augment/train_aug_1m data/train
-
-      # Make original+augmented data the new training data
-      mv data/train data/train_no_augment
-      ln -sf data/train_augment data/train
-   
+      echo "$0: Combining data data/train and data/augment/train_aug_1m."
+      utils/combine_data.sh data/train data/augment/train_aug_1m   
   fi
   ############ END AUGMENT #######
 
