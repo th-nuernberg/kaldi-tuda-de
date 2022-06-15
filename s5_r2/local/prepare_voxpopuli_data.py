@@ -71,7 +71,7 @@ def process(corpus_path, input_filename, language, output_datadir):
             full_file_path = corpus_path + 'transcribed_data/' + language + '/' + filename
             if os.path.isfile(full_file_path):
                 # Add file to output structure
-                corpus[myid] = (filename, normalized_text, spk, gndr)
+                corpus[myid] = (filename, normalized_text, spk)
                 #if s2g.get(spk) == None:
                 #    s2g[spk] = gndr
                 #else:
@@ -89,7 +89,7 @@ def process(corpus_path, input_filename, language, output_datadir):
     with open(output_datadir + 'wav.scp', 'w') as wav_scp, open(output_datadir + 'utt2spk', 'w') as utt2spk, open(output_datadir + 'text', 'w') as text_out:
         for myid in sorted(corpus.keys()):
             fullid = myid
-            filename, normalized_text, spk, gndr = corpus[myid]
+            filename, normalized_text, spk = corpus[myid]
 
             wav_scp.write(fullid + ' ' + wav_scp_template.replace("$filepath", corpus_path + 'transcribed_data/' + language + '/' + filename) + '\n')
             utt2spk.write(fullid + ' ' + spk + '\n')
