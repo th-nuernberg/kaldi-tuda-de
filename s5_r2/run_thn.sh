@@ -4,6 +4,7 @@
 
 # Copyright 2018 Kaldi developers (see: https://github.com/kaldi-asr/kaldi/blob/master/COPYING)
 # Copyright 2018 Language Technology, Universitaet Hamburg (author: Benjamin Milde)
+# Copyright 2022 Informatik, Technische Hochschule Nuernberg (authors: Dominik Wagner, Thomas Ranzenberger)
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,10 +24,16 @@ set -euxo pipefail
 
 stage=1
 use_BAS_dictionaries=false
+# Spoken Wikipedia: https://nats.gitlab.io/swc/
 add_swc_data=true
+# M-AILABS https://www.caito.de/2019/01/the-m-ailabs-speech-dataset/
 add_mailabs_data=true
+# Mozilla Common Voice: https://commonvoice.mozilla.org/en/datasets
 add_commonvoice_data=true
+# VoxPopuli: https://github.com/facebookresearch/voxpopuli
 add_voxpopuli_data=true
+# Multilingual LibriSpeech (MLS): https://www.openslr.org/94/
+add_mls_data=true
 
 # Turn on/off modifications to the original script
 fix_dict_dir=true
@@ -203,6 +210,16 @@ if [ $stage -le 1 ]; then
     fi
   fi
 
+  # download spacy de_core_news_lg model
+  if [ ! -d local/german_asr_lm_tools ]
+  then
+    python3 -m spacy download de_core_news_lg
+    cd local/
+    git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
+    cd ..
+    cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
+  fi
+
   if [ "$add_commonvoice_data" = true ]
   then
     if [ ! -d data/wav/cv/ ]
@@ -223,15 +240,6 @@ if [ $stage -le 1 ]; then
     fi
     if [ ! -d data/commonvoice_train ]
     then
-      # download spacy de_core_news_lg model
-      if [ ! -d local/german_asr_lm_tools ]
-      then
-        python3 -m spacy download de_core_news_lg
-        cd local/
-        git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
-        cd ..
-        cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
-      fi
       # make data directory data/commonvoice_train
       python3 local/prepare_commonvoice_data.py
     fi
@@ -246,7 +254,6 @@ if [ $stage -le 1 ]; then
         rm -r data/wav/vp_temp/
       fi
       mkdir -p data/wav/vp_temp/
-
       # download voxpopuli
       if [ ! -d voxpopuli ]
       then
@@ -265,22 +272,12 @@ if [ $stage -le 1 ]; then
       # vocabulary data/wav/vp_temp/lm_data/de/vocabulary.txt
       #python3 -m voxpopuli.get_lm_data --root ./../data/wav/vp_temp/ --lang de
       cd ..
-
       cd data/wav
       mv vp_temp/ vp/
       cd ../../
     fi
     if [ ! -d data/voxpopuli_train ]
     then
-      # download spacy de_core_news_lg model
-      if [ ! -d local/german_asr_lm_tools ]
-      then
-        python3 -m spacy download de_core_news_lg
-        cd local/
-        git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
-        cd ..
-        cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
-      fi
       # process dev and test for decoding tests
       # create data directory data/voxpopuli_dev
       python3 local/prepare_voxpopuli_data.py -c "data/wav/vp/" -f "asr_dev.tsv" -o "data/voxpopuli_dev/" --lang de
@@ -289,6 +286,38 @@ if [ $stage -le 1 ]; then
       # process train for training
       # create data directory data/voxpopuli_train
       python3 local/prepare_voxpopuli_data.py -c "data/wav/vp/" -f "asr_train.tsv" -o "data/voxpopuli_train/" --lang de
+    fi
+  fi
+
+  if [ "$add_mls_data" = true ]
+  then
+    if [ ! -d data/wav/mls/ ]
+    then
+      if [ -d data/wav/mls/ ]
+      then
+        rm -r data/wav/mls_temp/
+      fi
+      mkdir -p data/wav/mls_temp/
+      # download Multilingual LibriSpeech (MLS) german
+      wget --directory-prefix=data/wav/mls_temp/ https://dl.fbaipublicfiles.com/mls/mls_german.tar.gz
+      cd data/wav/mls_temp/
+      tar -xz --strip-component=1 -f mls_german.tar.gz
+      # Cleanup tar gz file
+      rm mls_german.tar.gz
+      cd ../
+      mv mls_temp/ mls/
+      cd ../../
+    fi
+    if [ ! -d data/mls_train ]
+    then
+      # process dev and test for decoding tests
+      # create data directory data/mls_dev
+      python3 local/prepare_mls_data.py -c "data/wav/mls/" -d "dev" -o "data/mls_dev/"
+      # create data directory data/mls_test
+      python3 local/prepare_mls_data.py -c "data/wav/mls/" -d "test" -o "data/mls_test/"
+      # process train
+      # create data directory data/mls_train
+      python3 local/prepare_mls_data.py -c "data/wav/mls/" -d "train" -o "data/mls_train/"
     fi
   fi
 fi
@@ -434,6 +463,11 @@ if [ $stage -le 6 ]; then
     if [ "$add_voxpopuli_data" = true ] ; then
       python3 local/renormalize_datadir_text.py -t data/voxpopuli_train/text
       cat data/voxpopuli_train/text >> ${g2p_dir}/complete_text
+    fi
+
+    if [ "$add_mls_data" = true ] ; then
+      python3 local/renormalize_datadir_text.py -t data/mls_train/text
+      cat data/mls_train/text >> ${g2p_dir}/complete_text
     fi
 
     if [ "$add_extra_data" = true ] ; then
@@ -587,6 +621,21 @@ if [ $stage -le 8 ]; then
 
 		echo "Done, now combining data (train voxpopuli_train)."
 		./utils/combine_data.sh data/train data/train_without_voxpopuli data/voxpopuli_train
+	fi
+
+	if [ "$add_mls_data" = true ] ; then
+		mv data/train data/train_without_mls || true
+        	echo "Now computing MFCC features for mls_train"
+        	# Now make MFCC features.
+        	x=mls_train
+        	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+        	steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+        	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+        	steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+        	utils/fix_data_dir.sh data/$x
+
+		echo "Done, now combining data (train mls_train)."
+		./utils/combine_data.sh data/train data/train_without_mls data/mls_train
 	fi
 
 	if [ "$add_extra_data" = true ] ; then
