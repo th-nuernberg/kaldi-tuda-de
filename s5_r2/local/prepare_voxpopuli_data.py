@@ -20,6 +20,7 @@ import common_utils
 import german_asr_lm_tools.normalize_sentences as normalize_sentences
 import spacy
 import os
+from pathlib import Path
 
 
 wav_scp_template = "sox $filepath -t wav -r 16k -b 16 -e signed - |"
@@ -37,8 +38,11 @@ def process(corpus_path, input_filename, language, output_datadir):
     # speaker2gender
     #s2g = {}
 
-    print('Loading', corpus_path + 'transcribed_data/' + language + '/' + input_filename)
-    with open(corpus_path + 'transcribed_data/' + language + '/' + input_filename) as corpus_path_in:
+    input_corpus_path = Path(corpus_path) / 'transcribed_data' / language / input_filename
+    if not input_corpus_path.exists():
+        raise FileNotFoundError(f'Corpus path {input_corpus_path} not found!')
+    print('Loading', input_corpus_path)
+    with open(input_corpus_path) as corpus_path_in:
         # Skip first line which contains the header of the tsv file
         itercorpus_path_in = iter(corpus_path_in)
         next(itercorpus_path_in)
@@ -46,32 +50,30 @@ def process(corpus_path, input_filename, language, output_datadir):
         for line in itercorpus_path_in:
             split = line.split('\t')
             # print(split)
-
-            # id
-            myid = split[0]
+            utt_id = split[0]
             # normalized_text
             text = split[2]
+            # speaker_id with prefix
+            spk = 'vp' + split[3]
             # gender
             gndr = split[5].replace("male", "m").replace("female", "f").replace("fem", "f")
-            # speaker_id with prefix
-            spk = 'voxpopuli-' + split[3]
             # 2018
-            subfolder = myid[0:4]
+            subfolder = utt_id[0:4]
             # 2018/20180313-0900-PLENARY-16-de_20180313-20:08:11_1.ogg
-            filename = subfolder + '/' + myid + '.ogg'
+            filename = subfolder + '/' + utt_id + '.ogg'
             if text not in normalize_cache:
                 normalized_text = normalize_sentences.normalize(nlp, text)
                 normalize_cache[text] = normalized_text
             else:
                 normalized_text = normalize_cache[text]
 
-            # print(myid, filename, normalized_text, spk, gndr)
+            # print(utt_id, filename, normalized_text, spk, gndr)
 
             # Validate that the file really exists
-            full_file_path = corpus_path + 'transcribed_data/' + language + '/' + filename
-            if os.path.isfile(full_file_path):
+            full_file_path = Path(corpus_path)  / 'transcribed_data' / language / filename
+            if full_file_path.is_file():
                 # Add file to output structure
-                corpus[myid] = (filename, normalized_text, spk)
+                corpus[utt_id] = (filename, normalized_text, spk)
                 #if s2g.get(spk) == None:
                 #    s2g[spk] = gndr
                 #else:
@@ -81,15 +83,19 @@ def process(corpus_path, input_filename, language, output_datadir):
                 #        print(gndr)
             else:
                 print("File does not exist! Skipping " + full_file_path)
-                print("Metadata: ", myid, filename, normalized_text, spk, gndr)
+                print("Metadata: ", utt_id, filename, normalized_text, spk, gndr)
 
     print('done loading ' + input_filename + '!')
     print('Now writing out to', output_datadir,'in Kaldi format!')
 
     with open(output_datadir + 'wav.scp', 'w') as wav_scp, open(output_datadir + 'utt2spk', 'w') as utt2spk, open(output_datadir + 'text', 'w') as text_out:
-        for myid in sorted(corpus.keys()):
-            fullid = myid
-            filename, normalized_text, spk = corpus[myid]
+        for utt_id in sorted(corpus.keys()):
+            filename, normalized_text, spk = corpus[utt_id]
+            
+            # Note: Speaker IDs must be a prefix of the utterance. 
+            # This is necessary for sorting utt2spk and spk2utt (see https://kaldi-asr.org/doc/data_prep.html)
+            # add speaker id as prefix to utterance, so we get proper sorting
+            fullid = spk + '-' + utt_id
 
             wav_scp.write(fullid + ' ' + wav_scp_template.replace("$filepath", corpus_path + 'transcribed_data/' + language + '/' + filename) + '\n')
             utt2spk.write(fullid + ' ' + spk + '\n')
