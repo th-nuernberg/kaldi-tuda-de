@@ -308,7 +308,7 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    print(f"{files_with_errors}/{len(wav_scp_file)} had problems with duration. A single noise was used over the entire signal")
+    print(f"augment_data_dir: {files_with_errors}/{len(wav_scp_file)} utterances had problems with duration. No noise will be added to those utterances.")
 
     write_dict_to_file(new_utt2wav, output_dir + "/wav.scp")
     copy_file_if_exists(input_dir + "/reco2dur", output_dir + "/reco2dur",

@@ -22,7 +22,7 @@
 # -e 'error', -u 'undefined variable', -o pipefail 'error in pipeline',
 set -euxo pipefail
 
-stage=8
+stage=9
 use_BAS_dictionaries=false
 # Spoken Wikipedia: https://nats.gitlab.io/swc/
 add_swc_data=true
@@ -59,7 +59,7 @@ add_train_text_to_lm=true
 # if you pair it with your own crawled data, so make sure to replace it with your own vocabulary file.
 
 # Current default is to download a pretrained LM
-build_own_lm=false
+build_own_lm=true
 
 #extra_words_file=local/extra_words.txt
 #extra_words_file=local/filtered_300k_vocab_de_wiki.txt
@@ -535,89 +535,81 @@ if [ $stage -le 7 ]; then
 fi
 
 if [ $stage -le 8 ]; then
-	# if [ "$add_swc_data" = true ] ; then
-	# 	  echo "Generating features for tuda_train, swc_train, dev and test"
-	# 	  # Making sure all swc files are C-sorted 
-	# 	  rm data/swc_train/spk2utt || true
+	if [ "$add_swc_data" = true ] ; then
+		  echo "Generating features for tuda_train, swc_train, dev and test"
+		  # Making sure all swc files are C-sorted 
+		  rm data/swc_train/spk2utt || true
 		  
-	# 	  cat data/swc_train/segments | sort > data/swc_train/segments_sorted
-	# 	  cat data/swc_train/text | sort | gawk 'NF>=2' > data/swc_train/text_sorted
-	# 	  cat data/swc_train/utt2spk | sort > data/swc_train/utt2spk_sorted
-	# 	  cat data/swc_train/wav.scp | sort > data/swc_train/wav.scp_sorted
+		  cat data/swc_train/segments | sort > data/swc_train/segments_sorted
+		  cat data/swc_train/text | sort | gawk 'NF>=2' > data/swc_train/text_sorted
+		  cat data/swc_train/utt2spk | sort > data/swc_train/utt2spk_sorted
+		  cat data/swc_train/wav.scp | sort > data/swc_train/wav.scp_sorted
 
-	# 	  mv data/swc_train/wav.scp_sorted data/swc_train/wav.scp
-	# 	  mv data/swc_train/utt2spk_sorted data/swc_train/utt2spk
-	# 	  mv data/swc_train/text_sorted data/swc_train/text
-	# 	  mv data/swc_train/segments_sorted data/swc_train/segments
+		  mv data/swc_train/wav.scp_sorted data/swc_train/wav.scp
+		  mv data/swc_train/utt2spk_sorted data/swc_train/utt2spk
+		  mv data/swc_train/text_sorted data/swc_train/text
+		  mv data/swc_train/segments_sorted data/swc_train/segments
 
-	# 	  echo "$LC_ALL"
+		  echo "$LC_ALL"
 
-	# 	  utils/utt2spk_to_spk2utt.pl data/swc_train/utt2spk > data/swc_train/spk2utt      
-	# 	  #utils/validate_data_dir.sh data/swc_train
+		  utils/utt2spk_to_spk2utt.pl data/swc_train/utt2spk > data/swc_train/spk2utt      
+		  #utils/validate_data_dir.sh data/swc_train
 		  
-	# 	  # Now make MFCC features.
-	# 	  for x in swc_train tuda_train dev test; do
-	# 		  utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-	# 		  steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
-	# 		  utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-	# 		  steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
-	# 		  utils/fix_data_dir.sh data/$x
-	# 	  done
+		  # Now make MFCC features.
+		  for x in swc_train tuda_train dev test; do
+			  utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+			  steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+			  utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+			  steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+			  utils/fix_data_dir.sh data/$x
+		  done
 
-	# 	  echo "Done, now combining data (tuda_train swc_train)."
-	# 	  ./utils/combine_data.sh data/train data/tuda_train data/swc_train
-	# else
-	# 	# Now make MFCC features.
-	# 	for x in train dev test; do
-	# 		utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-	# 		steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
-	# 		utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-	# 		steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
-	# 		utils/fix_data_dir.sh data/$x
-	# 	done
-	# fi
+		  echo "Done, now combining data (tuda_train swc_train)."
+		  ./utils/combine_data.sh data/train data/tuda_train data/swc_train
+	else
+		# Now make MFCC features.
+		for x in train dev test; do
+			utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+			steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+			utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+			steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+			utils/fix_data_dir.sh data/$x
+		done
+	fi
 
-	# if [ "$add_mailabs_data" = true ] ; then
-	# 	mv data/train data/train_without_mailabs || true
-	# 	echo "Now computing MFCC features for m_ailabs_train"
-	# 	# Now make MFCC features.
-	# 	x=m_ailabs_train
-	# 	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-	# 	steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
-	# 	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-	# 	steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
-	# 	utils/fix_data_dir.sh data/$x
+	if [ "$add_mailabs_data" = true ] ; then
+		mv data/train data/train_without_mailabs || true
+		echo "Now computing MFCC features for m_ailabs_train"
+		# Now make MFCC features.
+		x=m_ailabs_train
+		utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+		steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+		utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+		steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+		utils/fix_data_dir.sh data/$x
 		
-	# 	echo "Done, now combining data (train m_ailabs_train)."
-	# 	./utils/combine_data.sh data/train data/train_without_mailabs data/m_ailabs_train
-	# fi
+		echo "Done, now combining data (train m_ailabs_train)."
+		./utils/combine_data.sh data/train data/train_without_mailabs data/m_ailabs_train
+	fi
 
-	# if [ "$add_commonvoice_data" = true ] ; then
-	# 	mv data/train data/train_without_commonvoice || true
-  #       	echo "Now computing MFCC features for commonvoice_train"
-  #       	# Now make MFCC features.
-  #       	x=commonvoice_train
-  #       	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-  #       	steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
-  #       	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
-  #       	steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
-  #       	utils/fix_data_dir.sh data/$x
+	if [ "$add_commonvoice_data" = true ] ; then
+		mv data/train data/train_without_commonvoice || true
+        	echo "Now computing MFCC features for commonvoice_train"
+        	# Now make MFCC features.
+        	x=commonvoice_train
+        	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+        	steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+        	utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+        	steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+        	utils/fix_data_dir.sh data/$x
 
-	# 	echo "Done, now combining data (train commonvoice_train)."
-	# 	./utils/combine_data.sh data/train data/train_without_commonvoice data/commonvoice_train
-	# fi
+		echo "Done, now combining data (train commonvoice_train)."
+		./utils/combine_data.sh data/train data/train_without_commonvoice data/commonvoice_train
+	fi
 
 	if [ "$add_voxpopuli_data" = true ] ; then
 
     utils/fix_data_dir.sh data/voxpopuli_train || exit 1
-
-    # cat data/voxpopuli_train/text | sort | gawk 'NF>=2' > data/voxpopuli_train/text_sorted
-    # cat data/voxpopuli_train/utt2spk | sort > data/voxpopuli_train/utt2spk_sorted
-    # cat data/voxpopuli_train/wav.scp | sort > data/voxpopuli_train/wav.scp_sorted
-
-    # mv data/voxpopuli_train/wav.scp_sorted data/voxpopuli_train/wav.scp
-    # mv data/voxpopuli_train/utt2spk_sorted data/voxpopuli_train/utt2spk
-    # mv data/voxpopuli_train/text_sorted data/voxpopuli_train/text
 
 		mv data/train data/train_without_voxpopuli || true
         	echo "Now computing MFCC features for voxpopuli_train"
@@ -636,14 +628,6 @@ if [ $stage -le 8 ]; then
 	if [ "$add_mls_data" = true ] ; then
 
     utils/fix_data_dir.sh data/mls_train || exit 1
-
-    # cat data/mls_train/text | sort | gawk 'NF>=2' > data/mls_train/text_sorted
-    # cat data/mls_train/utt2spk | sort > data/mls_train/utt2spk_sorted
-    # cat data/mls_train/wav.scp | sort > data/mls_train/wav.scp_sorted
-
-    # mv data/mls_train/wav.scp_sorted data/mls_train/wav.scp
-    # mv data/mls_train/utt2spk_sorted data/mls_train/utt2spk
-    # mv data/mls_train/text_sorted data/mls_train/text
 
 		mv data/train data/train_without_mls || true
         	echo "Now computing MFCC features for mls_train"
@@ -677,28 +661,35 @@ fi
 
 if [ $stage -le 9 ]; then
 
-  ############### BEGIN AUGMENT
   if [ "$add_data_augmentation" = true ]; then
       echo "$0: Begin data augmentation"
       # Copy utt2numframes and feats.scp from dumpdir to train_dir
       # cp $dumpdir/$train_set/utt2num_frames $rootdir/$train_set || exit 1;
       # cp $dumpdir/$train_set/feats.scp $rootdir/$train_set || exit 1;
 
-      ./local/augment.sh --musan_root $musan_root data/train data/augment || exit 1;
+      local/augment.sh --musan_root $musan_root data/train data/augment || exit 1;
 
       echo "$0: Take random subset of augmented data and combine with clean data"
       # Take a random subset of the augmentations
       utils/subset_data_dir.sh data/augment/train_aug 1000000 data/augment/train_aug_1m
-      utils/fix_data_dir.sh data/augment/train_aug_1m
+      
+      x=augment/train_aug_1m
+			utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+			steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/$x exp/make_mfcc/$x $mfccdir
+			utils/fix_data_dir.sh data/$x # some files fail to get mfcc for many reasons
+			steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir
+			utils/fix_data_dir.sh data/$x
 
-      # Make MFCCs for the augmented data
-      steps/make_mfcc.sh --cmd "$train_cmd" --nj $nJobs data/augment/train_aug_1m $mfccdir
-      # Combine the clean and augmented list.  This is now roughly
-      # double the size of the original clean list.
+      # Backup datadir without augmentation
+      # utils/copy_data_dir.sh data/train data/train_without_augmentation
+
+      mv data/train data/train_without_augmentation || true
+
+      # Combine the clean and augmented list
       echo "$0: Combining data data/train and data/augment/train_aug_1m."
-      utils/combine_data.sh data/train data/augment/train_aug_1m   
+      # utils/combine_data.sh data/train data/augment/train_aug_1m 
+      utils/combine_data.sh data/train data/train_without_augmentation data/augment/train_aug_1m 
   fi
-  ############ END AUGMENT #######
 
   mkdir -p ${lm_dir}/
 

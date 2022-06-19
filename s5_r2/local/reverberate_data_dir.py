@@ -364,7 +364,7 @@ def generate_reverberated_wav_scp(wav_scp,  # a dictionary whose values are the 
                                                 max_noises_recording  # Maximum number of point-source noises that can be added
                                                 )
             except KeyError:
-                    reverberate_opts == ""
+                    reverberate_opts = ""
 
 
             # prefix using index 0 is reserved for original data e.g. rvb0_swb0035 corresponds to the swb0035 recording in original data

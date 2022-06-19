@@ -84,7 +84,7 @@ def process(text_kaldi_file):
 
                 texts.append(myid + ' ' + normalized_text)
             else:
-                print('Warning,', myid, 'has no text!')
+                print('Warning, line', str(line), 'has no text!')
 
     print('Rewrite', text_kaldi_file)
     with open(text_kaldi_file, 'w') as outfile:
