@@ -210,24 +210,20 @@ if [ $stage -le 1 ]; then
     fi
   fi
 
-  # download spacy de_core_news_lg model
-  if [ ! -d local/german_asr_lm_tools ]
-  then
-    python3 -m spacy download de_core_news_lg
-    cd local/
-    git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
-    cd ..
-    cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
-  fi
+  # # download spacy de_core_news_lg model
+  # if [ ! -d local/german_asr_lm_tools ]
+  # then
+  #   python3 -m spacy download de_core_news_lg
+  #   cd local/
+  #   git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
+  #   cd ..
+  #   cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
+  # fi
 
   if [ "$add_commonvoice_data" = true ]
   then
     if [ ! -d data/wav/cv/ ]
     then
-       if [ -d data/wav/cv/ ]
-       then
-        rm -r data/wav/cv_temp/
-       fi
        mkdir -p data/wav/cv_temp/
        # wget --directory-prefix=data/wav/cv_temp/ $kaldi_tuda_de_corpus_server/cv-corpus-8.0-2022-01-19-de.tar.gz   
        wget --directory-prefix=data/wav/cv_temp/ https://mozilla-common-voice-datasets.s3.dualstack.us-west-2.amazonaws.com/cv-corpus-9.0-2022-04-27/cv-corpus-9.0-2022-04-27-de.tar.gz   
@@ -240,6 +236,8 @@ if [ $stage -le 1 ]; then
     fi
     if [ ! -d data/commonvoice_train ]
     then
+      python3 -m spacy download de_core_news_lg
+      ln -s local/german_asr_lm_tools/normalisierung.py local/normalisierung.py || exit 1
       # make data directory data/commonvoice_train
       python3 local/prepare_commonvoice_data.py
     fi
