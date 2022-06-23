@@ -22,7 +22,7 @@
 # -e 'error', -u 'undefined variable', -o pipefail 'error in pipeline',
 set -euxo pipefail
 
-stage=9
+stage=0
 use_BAS_dictionaries=false
 # Spoken Wikipedia: https://nats.gitlab.io/swc/
 add_swc_data=true

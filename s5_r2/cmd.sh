@@ -15,7 +15,7 @@ export train_cmd="utils/run.pl"
 export decode_cmd="utils/run.pl"
 export cuda_cmd="utils/run.pl -l gpu=1"
 # export sequitur_g2p="/usr/local/bin/g2p.py"
-export sequitur_g2p="/nfs/scratch/staff/wagnerdo/kaldi/egs/kaldi-tuda-de/s5_r2/venv/bin/g2p.py"
+export sequitur_g2p="./venv/bin/g2p.py"
 
-export nJobs=28
-export nDecodeJobs=12
+export nJobs=36
+export nDecodeJobs=24
