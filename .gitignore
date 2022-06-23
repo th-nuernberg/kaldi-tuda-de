@@ -4,11 +4,10 @@ s5_r2/steps
 s5_r2/utils
 s5_r2/RIRS_NOISES/
 s5_r2/venv
-#s5_r2/data/
+s5_r2/data/
 s5_r2/env/
 s5_r2/exp*/
 s5_r2/mfcc*/
 s5_r2/g2p/*
 s5_r2/local/__pycache__/
 s5_r2/sequitur*/
-s5_r2/data_backup_*
