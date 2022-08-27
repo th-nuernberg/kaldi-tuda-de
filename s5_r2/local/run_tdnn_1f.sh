@@ -34,7 +34,8 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-train_stage=-10
+# train_stage=-10
+train_stage=56230
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 decode_affix=v6 #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f
@@ -45,7 +46,8 @@ num_jobs_initial=1
 num_jobs_final=1
 
 # these variables influnce training outcomes
-num_chunk_per_minibatch=128
+# num_chunk_per_minibatch=128
+num_chunk_per_minibatch=256
 leaky_hmm_coefficient=0.1
 l2_regularize=0.00005
 proportional_shrink=20
@@ -60,7 +62,7 @@ lang_dir=data/lang_std_big_v6
 #lang_dir=data/lang_std_small_test
 
 tdnn_affix=1f_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
-if [ "$with_specaugment" = true ]
+if [ "$with_specaugment" = true ]; then
   tdnn_affix=${tdnn_affix}_specaug
 fi
 
@@ -247,7 +249,7 @@ EOF
 
 EOF
 
-  fi
+fi
 
 
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
@@ -261,7 +263,8 @@ if [ $stage -le 18 ]; then
   fi
 
  steps/nnet3/chain/train.py --stage $train_stage \
-    --cmd "$decode_cmd" \
+    --egs.stage 100 \
+    --cmd "$cuda_cmd" \
     --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \
@@ -308,9 +311,10 @@ if [ $stage -le 20 ]; then
   for dset in dev test; do
       
       steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
+          --stage 3 \
           --acwt 1.0 --post-decode-acwt 10.0 \
           --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
-          --scoring-opts "--min-lmwt 5 " \
+          --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \
          $dir/graph${decode_affix} data/${dset}_hires $dir/decode_${dset}${decode_affix} || exit 1;
       # now rescore with G.carpa
       steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" ${lang_dir}_test ${lang_dir}_const_arpa/ \

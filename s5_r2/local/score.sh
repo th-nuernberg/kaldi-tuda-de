@@ -17,6 +17,9 @@ min_lmwt=7
 max_lmwt=17
 iter=final
 compute_wer_mode=all #default was present
+ref_filtering_cmd="cat"
+hyp_filtering_cmd="cat"
+
 
 #end configuration section.
 
@@ -46,13 +49,14 @@ for f in $symtab $dir/lat.1.gz $data/text; do
 done
 
 
-ref_filtering_cmd="cat"
 [ -x local/wer_output_filter ] && ref_filtering_cmd="local/wer_output_filter"
 [ -x local/wer_ref_filter ] && ref_filtering_cmd="local/wer_ref_filter"
-hyp_filtering_cmd="cat"
+
 [ -x local/wer_output_filter ] && hyp_filtering_cmd="local/wer_output_filter"
 [ -x local/wer_hyp_filter ] && hyp_filtering_cmd="local/wer_hyp_filter"
 
+echo "Using ref_filtering_cmd ${ref_filtering_cmd}"
+echo "Using hyp_filtering_cmd ${hyp_filtering_cmd}"
 
 if $decode_mbr ; then
   echo "$0: scoring with MBR, word insertion penalty=$word_ins_penalty"
@@ -64,7 +68,7 @@ fi
 mkdir -p $dir/scoring_kaldi
 cat $data/text | $ref_filtering_cmd > $dir/scoring_kaldi/test_filt.txt || exit 1;
 if [ $stage -le 0 ]; then
-
+  echo "Begin Scoring. test_filt.txt can be found at: $dir/scoring_kaldi/test_filt.txt"
   for wip in $(echo $word_ins_penalty | sed 's/,/ /g'); do
     mkdir -p $dir/scoring_kaldi/penalty_$wip/log
 

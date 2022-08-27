@@ -215,11 +215,9 @@ if [ $stage -le 1 ]; then
     then
       # download spacy de_core_news_lg model
       python3 -m spacy download de_core_news_lg
-      cd local/
-      git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
-      cd ..
+
       # make data directory data/commonvoice_train
-      cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
+      ln -s local/german_asr_lm_tools/normalisierung.py local/normalisierung.py || exit 1
       python3 local/prepare_commonvoice_data.py
     fi
   fi

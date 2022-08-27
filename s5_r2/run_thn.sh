@@ -22,7 +22,7 @@
 # -e 'error', -u 'undefined variable', -o pipefail 'error in pipeline',
 set -euxo pipefail
 
-stage=0
+stage=20
 use_BAS_dictionaries=false
 # Spoken Wikipedia: https://nats.gitlab.io/swc/
 add_swc_data=true
@@ -210,16 +210,6 @@ if [ $stage -le 1 ]; then
     fi
   fi
 
-  # # download spacy de_core_news_lg model
-  # if [ ! -d local/german_asr_lm_tools ]
-  # then
-  #   python3 -m spacy download de_core_news_lg
-  #   cd local/
-  #   git clone https://github.com/bmilde/german-asr-lm-tools german_asr_lm_tools
-  #   cd ..
-  #   cp --link local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
-  # fi
-
   if [ "$add_commonvoice_data" = true ]
   then
     if [ ! -d data/wav/cv/ ]
@@ -237,7 +227,7 @@ if [ $stage -le 1 ]; then
     if [ ! -d data/commonvoice_train ]
     then
       python3 -m spacy download de_core_news_lg
-      ln -s local/german_asr_lm_tools/normalisierung.py local/normalisierung.py || exit 1
+      cp --link --no-clobber local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       # make data directory data/commonvoice_train
       python3 local/prepare_commonvoice_data.py
     fi
@@ -846,7 +836,7 @@ if [ $stage -le 12 ]; then
                utils/mkgraph.sh ${lang_dir}_test exp/tri1 $graph_dir
     
     for dset in dev test; do
-        steps/decode_si.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+        steps/decode_si.sh --nj 16 --cmd "$decode_cmd" --config conf/decode.config \
                        $graph_dir data/${dset} exp/tri1/decode_${dset}_nosp
     done
     
@@ -868,7 +858,7 @@ if [ $stage -le 13 ]; then
                utils/mkgraph.sh ${lang_dir}_test exp/tri2 $graph_dir
 
     for dset in dev test; do
-        steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+        steps/decode.sh --nj 16 --cmd "$decode_cmd" --config conf/decode.config \
                     $graph_dir data/${dset} exp/tri2/decode_${dset}_nosp
     done
 fi
@@ -892,7 +882,7 @@ if [ $stage -le 14 ]; then
              utils/mkgraph.sh ${lang_dir}_test exp/tri3 $graph_dir
 
   for dset in dev test; do
-      steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+      steps/decode.sh --nj 16 --cmd "$decode_cmd" --config conf/decode.config \
                   $graph_dir data/${dset} exp/tri3/decode_${dset}_nosp
   done
 fi
@@ -929,7 +919,7 @@ if [ $stage -le 15 ]; then
              utils/mkgraph.sh ${lang_dir}_test_pron exp/tri3 $graph_dir
   
   for dset in dev test; do
-      steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+      steps/decode.sh --nj 16 --cmd "$decode_cmd" --config conf/decode.config \
                   $graph_dir data/${dset} exp/tri3/decode_${dset}_pron
   done
 fi
@@ -955,7 +945,7 @@ if [ $stage -le 16 ]; then
              utils/mkgraph.sh ${lang_dir}_test_pron exp/tri4 $graph_dir
 
   for dset in dev test; do
-      steps/decode_fmllr.sh --nj $nDecodeJobs --cmd "$decode_cmd" \
+      steps/decode_fmllr.sh --nj 16 --cmd "$decode_cmd" \
                       --config conf/decode.config \
                       $graph_dir data/${dset} exp/tri4/decode_${dset}_pron
   done
@@ -985,11 +975,16 @@ if [ $stage -le 19 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
   echo ./local/run_tdnn_1f.sh --lang_dir ${lang_dir}
   
-  ./local/run_tdnn_1f.sh --with_specaugment $with_specaugment --lang_dir ${lang_dir} --nj $nJobs --decode_nj $nDecodeJobs
+  ./local/run_tdnn_1f.sh \
+    --with_specaugment $with_specaugment \
+    --stage 20 \
+    --lang_dir ${lang_dir} \
+    --nj $nJobs \
+    --decode_nj $nDecodeJobs
 fi
 
 if [ $stage -le 20 ]; then
   echo "Now train RNNLM"
-  ./local/train_rnnlm.sh
+  ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
 fi
 
