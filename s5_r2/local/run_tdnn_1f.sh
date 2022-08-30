@@ -34,8 +34,8 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-# train_stage=-10
-train_stage=56230
+train_stage=-10
+# train_stage=56230
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 decode_affix=v6 #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f
@@ -262,8 +262,8 @@ if [ $stage -le 18 ]; then
      /export/b0{5,6,7,8}/$USER/kaldi-data/egs/ami-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
   fi
 
+#     --egs.stage 100 \
  steps/nnet3/chain/train.py --stage $train_stage \
-    --egs.stage 100 \
     --cmd "$cuda_cmd" \
     --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \

@@ -6,7 +6,13 @@
 %WER 35.40 [ 23637 / 66764, 3487 ins, 3442 del, 16708 sub ] [PARTIAL] exp//tri4/decode_dev_pron.si/wer_11_0.0
 %WER 25.24 [ 17556 / 69568, 2629 ins, 2496 del, 12431 sub ] [PARTIAL] exp//tri4/decode_test_pron/wer_12_0.5
 %WER 35.44 [ 24654 / 69568, 3660 ins, 3486 del, 17508 sub ] [PARTIAL] exp//tri4/decode_test_pron.si/wer_10_0.5
+%WER 12.05 [ 8047 / 66764, 1459 ins, 870 del, 5718 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_dev/wer_10_0.5
+%WER 10.36 [ 6920 / 66764, 1334 ins, 817 del, 4769 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_dev_rescore/wer_11_0.5
+%WER 8.30 [ 5544 / 66764, 1167 ins, 638 del, 3739 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_dev_rescore_rnnlm_1e_0.45/wer_13_0.0
 %WER 12.05 [ 8047 / 66764, 1459 ins, 870 del, 5718 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_devv6/wer_10_0.5
 %WER 10.36 [ 6920 / 66764, 1334 ins, 817 del, 4769 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_devv6_rescore/wer_11_0.5
+%WER 12.66 [ 8805 / 69568, 1682 ins, 799 del, 6324 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_test/wer_11_0.0
+%WER 11.04 [ 7677 / 69568, 1474 ins, 735 del, 5468 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_test_rescore/wer_11_0.5
+%WER 9.09 [ 6327 / 69568, 1268 ins, 651 del, 4408 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_test_rescore_rnnlm_1e_0.45/wer_12_0.5
 %WER 12.66 [ 8805 / 69568, 1682 ins, 799 del, 6324 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_testv6/wer_11_0.0
 %WER 11.04 [ 7677 / 69568, 1474 ins, 735 del, 5468 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_2048_specaug_sp_bi/decode_testv6_rescore/wer_11_0.5

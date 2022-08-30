@@ -126,7 +126,7 @@ if [ $stage -le 3 ]; then
 
   rnnlm/train_rnnlm.sh --num-jobs-initial 1 --num-jobs-final 1 --initial-effective-lrate 0.0009 --final_effective_lrate 0.0001 \
                   --num-samples 1024 --embedding-l2 0.008 --num-egs-threads 10 \
-                  --stage $train_stage --num-epochs 3 --cmd "$train_cmd" $dir
+                  --stage $train_stage --num-epochs 3 --cmd "$train_cmd --mem 32G" $dir
 fi
 
 if [ $stage -le 4 ] && $run_lat_rescore; then
@@ -140,7 +140,7 @@ if [ $stage -le 4 ] && $run_lat_rescore; then
 
     # Lattice rescoring
     rnnlm/lmrescore$pruned.sh \
-      --cmd "$decode_cmd --mem 4G" \
+      --cmd "$decode_cmd --mem 32G" \
       --weight 0.45 --max-ngram-order $ngram_order \
       $old_lm $dir \
       data/${decode_set}_hires ${decode_dir} \
@@ -157,7 +157,7 @@ if [ $stage -le 5 ] && $run_nbest_rescore; then
 
     # Lattice rescoring
     rnnlm/lmrescore_nbest.sh \
-      --cmd "$decode_cmd --mem 4G" --N 20 \
+      --cmd "$decode_cmd --mem 32G" --N 20 \
       0.8 $old_lm $dir \
       data/${decode_set}_hires ${decode_dir} \
       ${decode_dir}_${decode_dir_suffix}_nbest
