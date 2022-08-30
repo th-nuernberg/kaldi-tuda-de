@@ -974,10 +974,10 @@ fi
 if [ $stage -le 19 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
   echo ./local/run_tdnn_1f.sh --lang_dir ${lang_dir}
-  
+  #     --stage 20 \
+
   ./local/run_tdnn_1f.sh \
     --with_specaugment $with_specaugment \
-    --stage 20 \
     --lang_dir ${lang_dir} \
     --nj $nJobs \
     --decode_nj $nDecodeJobs
@@ -986,6 +986,7 @@ fi
 if [ $stage -le 20 ]; then
   echo "Now train RNNLM"
   # --stage 4 --train-stage 135
-  ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
+  # ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
+  ./local/train_rnnlm.sh
 fi
 
