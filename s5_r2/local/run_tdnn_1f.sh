@@ -311,7 +311,6 @@ if [ $stage -le 20 ]; then
   for dset in dev test; do
       
       steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
-          --stage 3 \
           --acwt 1.0 --post-decode-acwt 10.0 \
           --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
           --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \

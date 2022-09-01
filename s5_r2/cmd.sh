@@ -51,7 +51,7 @@ fi
 # export cuda_cmd="utils/slurm.pl --num_threads 28 --mem 2G"
 
 # export sequitur_g2p="/usr/local/bin/g2p.py"
-export sequitur_g2p="./venv/bin/g2p.py"
+export sequitur_g2p="../../../venv/bin/g2p.py"
 
 export nJobs=28
 export nDecodeJobs=12
