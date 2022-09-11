@@ -35,7 +35,7 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
 train_stage=-10
-# train_stage=56230
+# train_stage=4113
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 decode_affix=v6 #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f
@@ -53,7 +53,9 @@ l2_regularize=0.00005
 proportional_shrink=20
 num_hidden=2048
 num_epochs=5
-with_specaugment=true
+with_specaugment=false
+test_augmented=true
+musan_root=/nfs/data/musan
 # Only for training with specaugment
 ivector_affine_opts="l2-regularize=0.03"
 
@@ -63,6 +65,7 @@ lang_dir=data/lang_std_big_v6
 
 tdnn_affix=1f_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
 if [ "$with_specaugment" = true ]; then
+  echo "Using SpecAugment for model training"
   tdnn_affix=${tdnn_affix}_specaug
 fi
 
@@ -133,7 +136,7 @@ fi
 if [ $stage -le 15 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
-  steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" ${lores_train_data_dir} \
+  steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd --mem 12G" ${lores_train_data_dir} \
     $lang_dir $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
 fi
@@ -306,6 +309,12 @@ if [ $stage -le 19 ]; then
   utils/mkgraph.sh --self-loop-scale 1.0 ${lang_dir}_test $dir $dir/graph${decode_affix}
 fi
 
+# --acwt sets --acoustic-scale in nnet3-latgen-faster:
+# A scaling factor for acoustic log-likelihoods (caution: is a no-op if set in the program nnet3-compute (float, default = 0.1)
+# --post-decode-acwt sets lattice-scale --acoustic-scale=$post_decode_acwt
+# lattice-scale: Applies scaling to lattice weights 
+# --acoustic-scale            : Scaling factor for acoustic likelihoods (float, default = 1)
+
 if [ $stage -le 20 ]; then
   rm $dir/.error 2>/dev/null || true
   for dset in dev test; do
@@ -322,6 +331,46 @@ if [ $stage -le 20 ]; then
   if [ -f $dir/.error ]; then
     echo "$0: something went wrong in decoding"
     exit 1
+  fi
+fi
+
+
+if [ $stage -le 21 ]; then
+  if [ "$test_augmented" = true ]; then
+    echo "$0: Begin data augmentation"
+    # Copy utt2numframes and feats.scp from dumpdir to train_dir
+    # cp $dumpdir/$train_set/utt2num_frames $rootdir/$train_set || exit 1;
+    # cp $dumpdir/$train_set/feats.scp $rootdir/$train_set || exit 1;
+    for datadir in dev test; do
+      local/augment.sh --reverb_data_dir data/${datadir}_reverb --musan_root $musan_root data/${datadir} data/${datadir}_augment || exit 1;
+
+      cp data/${datadir}_augment/train_aug/* data/${datadir}_augment
+
+      steps/make_mfcc.sh --nj $nj --mfcc-config conf/mfcc_hires.conf \
+        --cmd "$train_cmd" data/${datadir}_augment
+      steps/compute_cmvn_stats.sh data/${datadir}_augment
+      utils/fix_data_dir.sh data/${datadir}_augment
+
+      steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 8 \
+        data/${datadir}_augment exp/nnet3${nnet3_affix}/extractor \
+        exp/nnet3${nnet3_affix}/ivectors_${datadir}_augment
+    done
+
+    rm $dir/.error 2>/dev/null || true
+    for dset in dev test; do
+        steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
+            --acwt 1.0 --post-decode-acwt 10.0 \
+            --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_augment \
+            --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \
+            $dir/graph${decode_affix} data/${dset}_augment $dir/decode_${dset}${decode_affix}_augment || exit 1;
+        # now rescore with G.carpa
+        steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" ${lang_dir}_test ${lang_dir}_const_arpa/ \
+          data/${dset}_augment ${dir}/decode_${dset}${decode_affix}_augment ${dir}/decode_${dset}${decode_affix}_augment_rescore || exit 1;
+    done
+    if [ -f $dir/.error ]; then
+      echo "$0: something went wrong in decoding augmented data"
+      exit 1
+    fi
   fi
 fi
 exit 0
