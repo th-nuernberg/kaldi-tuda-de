@@ -51,6 +51,9 @@ ngram_order=4 # approximate the lattice-rescoring by limiting the max-ngram-orde
               # exploding exponentially
 pruned_rescore=true
 
+test_augmented=true
+with_specaugment=true
+
 . ./cmd.sh
 . ./utils/parse_options.sh
 
@@ -148,9 +151,31 @@ if [ $stage -le 4 ] && $run_lat_rescore; then
   done
 fi
 
+
+if [ $stage -le 5 ] && $run_lat_rescore; then
+  echo "$0: Perform lattice-rescoring on $ac_model_dir for augmented data"
+  pruned=
+  if $pruned_rescore; then
+    pruned=_pruned
+  fi
+  if [ "$test_augmented" = true ]; then
+    for decode_set in dev test; do
+      decode_dir=${ac_model_dir}/${old_decode_dir_prefix}_${decode_set}_augment${old_decode_dir_suffix}
+      # Lattice rescoring
+      rnnlm/lmrescore$pruned.sh \
+        --cmd "$decode_cmd --mem 32G" \
+        --weight 0.45 --max-ngram-order $ngram_order \
+        $old_lm $dir \
+        data/${decode_set}_augment ${decode_dir} \
+        ${decode_dir}_${decode_dir_suffix}_0.45_augment
+    done
+  fi
+fi
+
+
 exit
 
-if [ $stage -le 5 ] && $run_nbest_rescore; then
+if [ $stage -le 6 ] && $run_nbest_rescore; then
   echo "$0: Perform nbest-rescoring on $ac_model_dir"
   for decode_set in dev test; do
     decode_dir=${ac_model_dir}/${old_decode_dir_prefix}_${decode_set}

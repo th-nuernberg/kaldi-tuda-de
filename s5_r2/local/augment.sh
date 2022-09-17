@@ -34,6 +34,9 @@ rvb_opts=()
 rvb_opts+=(--rir-set-parameters "0.5, RIRS_NOISES/simulated_rirs/smallroom/rir_list")
 rvb_opts+=(--rir-set-parameters "0.5, RIRS_NOISES/simulated_rirs/mediumroom/rir_list")
 
+# local/reverberate_data_dir.py --rir-set-parameters 0.5, RIRS_NOISES/simulated_rirs/smallroom/rir_list --rir-set-parameters 0.5, R
+# IRS_NOISES/simulated_rirs/mediumroom/rir_list --speech-rvb-probability 1 --pointsource-noise-addition-probability 0 --isotropic-noise-addition-probability 0 
+# --num-replications 1 --source-sampling-rate 16000 data/dev data/train_reverb
 # Make a reverberated version of the VoxCeleb2 list.  Note that we don't add any
 # additive noise here.
 local/reverberate_data_dir.py \
