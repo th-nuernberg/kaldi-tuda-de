@@ -53,7 +53,7 @@ l2_regularize=0.00005
 proportional_shrink=20
 num_hidden=2048
 num_epochs=5
-with_specaugment=false
+with_specaugment=true
 test_augmented=true
 musan_root=/nfs/data/musan
 # Only for training with specaugment
@@ -260,10 +260,6 @@ fi
 fi
 
 if [ $stage -le 18 ]; then
-  if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $dir/egs/storage ]; then
-    utils/create_split_dir.pl \
-     /export/b0{5,6,7,8}/$USER/kaldi-data/egs/ami-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
-  fi
 
 #     --egs.stage 100 \
  steps/nnet3/chain/train.py --stage $train_stage \
