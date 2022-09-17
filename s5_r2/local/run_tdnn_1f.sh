@@ -34,8 +34,8 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-# train_stage=-10
-train_stage=4113
+train_stage=-10
+# train_stage=4113
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 decode_affix= #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f

@@ -52,7 +52,6 @@ ngram_order=4 # approximate the lattice-rescoring by limiting the max-ngram-orde
 pruned_rescore=true
 
 test_augmented=true
-with_specaugment=true
 
 . ./cmd.sh
 . ./utils/parse_options.sh

@@ -88,7 +88,7 @@ if [ ! -f ${lm_dir}/cleaned_lm_text.gz ]; then
     echo
     echo "WARNING: The default vocabulary file $extra_words_file may give suboptimal WER results, if you pair it with your own crawled data, so make sure to replace it with your own vocabulary file."
 
-    exit -1
+    #exit -1
 fi
 
 if [ -f $sequitur_g2p ]
@@ -121,6 +121,9 @@ utf8()
 
 if [ $stage -le 1 ]; then
   # Prepares KALDI dir structure and asks you where to store mfcc vectors and the final models (both can take up significant space)
+  echo "using python:"
+  which python
+
   python3 local/prepare_dir_structure.py
 
   if [ ! -d data/wav/TudaDatasetV4/ ]
@@ -215,9 +218,9 @@ if [ $stage -le 1 ]; then
     then
       # download spacy de_core_news_lg model
       python3 -m spacy download de_core_news_lg
-
+      cp --link --no-clobber local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       # make data directory data/commonvoice_train
-      ln -s local/german_asr_lm_tools/normalisierung.py local/normalisierung.py || exit 1
+      # ln -sf local/german_asr_lm_tools/normalisierung.py local/normalisierung.py
       python3 local/prepare_commonvoice_data.py
     fi
   fi
@@ -697,17 +700,17 @@ fi
 
 if [ $stage -le 14 ]; then
   # The 200k_nodup data is used in the nnet2 recipe.
-  steps/align_si.sh --nj $nJobs --cmd "$train_cmd" \
-                    data/train_200k_nodup ${lang_dir_nosp} exp/tri2 exp/tri2_ali_200k_nodup
+  #steps/align_si.sh --nj $nJobs --cmd "$train_cmd" \
+  #                  data/train_200k_nodup ${lang_dir_nosp} exp/tri2 exp/tri2_ali_200k_nodup
 
   # From now, we start using all of the data (except some duplicates of common
   # utterances, which don't really contribute much).
-  steps/align_si.sh --nj $nJobs --cmd "$train_cmd" \
-                    data/train_nodup ${lang_dir_nosp} exp/tri2 exp/tri2_ali_nodup
+  #steps/align_si.sh --nj $nJobs --cmd "$train_cmd" \
+  #                  data/train_nodup ${lang_dir_nosp} exp/tri2 exp/tri2_ali_nodup
 
   # Do another iteration of LDA+MLLT training, on all the data.
-  steps/train_lda_mllt.sh --cmd "$train_cmd" \
-                          6000 140000 data/train_nodup ${lang_dir_nosp} exp/tri2_ali_nodup exp/tri3
+  #steps/train_lda_mllt.sh --cmd "$train_cmd" \
+  #                        6000 140000 data/train_nodup ${lang_dir_nosp} exp/tri2_ali_nodup exp/tri3
 
   graph_dir=exp/tri3/graph_nosp
   $train_cmd $graph_dir/mkgraph.log \
@@ -807,11 +810,11 @@ if [ $stage -le 19 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
   echo ./local/run_tdnn_1f.sh --lang_dir ${lang_dir}
   
-  ./local/run_tdnn_1f.sh --lang_dir ${lang_dir} --nj $nJobs --decode_nj $nDecodeJobs
+  ./local/run_tdnn_1f.sh --lang_dir ${lang_dir} --nj $nJobs --decode_nj $nDecodeJobs --stage 18
 fi
 
 if [ $stage -le 20 ]; then
   echo "Now train RNNLM"
-  ./local/train_rnnlm.sh
+  ./local/train_rnnlm.sh --stage 4
 fi
 
