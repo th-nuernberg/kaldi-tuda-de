@@ -986,6 +986,6 @@ if [ $stage -le 20 ]; then
   echo "Now train RNNLM"
   # --stage 4 --train-stage 135
   # ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
-  ./local/train_rnnlm.sh
+  ./local/train_rnnlm.sh --stage 4
 fi
 
