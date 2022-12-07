@@ -42,8 +42,8 @@ decode_affix=v6 #if you want to to change decoding parameters and decode into a 
 common_egs_dir=  # you can set this to use previously dumped egs.
 
 # how many GPU jobs to start in parallel
-num_jobs_initial=3
-num_jobs_final=3
+num_jobs_initial=8
+num_jobs_final=8
 
 # these variables influnce training outcomes
 # num_chunk_per_minibatch=128
@@ -167,7 +167,7 @@ if [ $stage -le 17 ]; then
   if [ "$with_specaugment" = "true" ]; then
 
   cat <<EOF > $dir/configs/network.xconfig
-  input dim=100 name=ivector
+  #input dim=100 name=ivector
   input dim=40 name=input
 
   # please note that it is important to have input layer with the name=input
@@ -181,11 +181,11 @@ if [ $stage -le 17 ]; then
   # than filterbanks.
   idct-layer name=idct input=input dim=40 cepstral-lifter=22 affine-transform-file=$dir/configs/idct.mat
 
-  linear-component name=ivector-linear $ivector_affine_opts dim=200 input=ReplaceIndex(ivector, t, 0)
-  batchnorm-component name=ivector-batchnorm target-rms=0.025
+  #linear-component name=ivector-linear $ivector_affine_opts dim=200 input=ReplaceIndex(ivector, t, 0)
+  #batchnorm-component name=ivector-batchnorm target-rms=0.025
   batchnorm-component name=idct-batchnorm input=idct
   spec-augment-layer name=idct-spec-augment freq-max-proportion=0.5 time-zeroed-proportion=0.2 time-mask-max-frames=20
-  combine-feature-maps-layer name=combine_inputs input=Append(idct-spec-augment, ivector-batchnorm) num-filters1=1 num-filters2=5 height=40
+  #combine-feature-maps-layer name=combine_inputs input=Append(idct-spec-augment, ivector-batchnorm) num-filters1=1 num-filters2=5 height=40
   ############## SPECAUGMENT ENDS HERE ###################################
 
 
@@ -218,13 +218,13 @@ EOF
   else
 
   cat <<EOF > $dir/configs/network.xconfig
-  input dim=100 name=ivector
+  # input dim=100 name=ivector
   input dim=40 name=input
 
   # please note that it is important to have input layer with the name=input
   # as the layer immediately preceding the fixed-affine-layer to enable
   # the use of short notation for the descriptor
-  fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  # fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
 
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-layer name=tdnn1 dim=$num_hidden self-repair-scale=1.0e-04
@@ -262,9 +262,9 @@ fi
 if [ $stage -le 18 ]; then
 
 #     --egs.stage 100 \
+#     --feat.online-ivector-dir $train_ivector_dir \
  steps/nnet3/chain/train.py --stage $train_stage \
     --cmd "$cuda_cmd" \
-    --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \
     --chain.leaky-hmm-coefficient $leaky_hmm_coefficient \
@@ -311,13 +311,13 @@ fi
 # lattice-scale: Applies scaling to lattice weights 
 # --acoustic-scale            : Scaling factor for acoustic likelihoods (float, default = 1)
 
+#           --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
 if [ $stage -le 20 ]; then
   rm $dir/.error 2>/dev/null || true
   for dset in dev test; do
       
       steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
           --acwt 1.0 --post-decode-acwt 10.0 \
-          --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
           --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \
          $dir/graph${decode_affix} data/${dset}_hires $dir/decode_${dset}${decode_affix} || exit 1;
       # now rescore with G.carpa
@@ -347,16 +347,16 @@ if [ $stage -le 21 ]; then
       steps/compute_cmvn_stats.sh data/${datadir}_augment
       utils/fix_data_dir.sh data/${datadir}_augment
 
-      steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 8 \
-        data/${datadir}_augment exp/nnet3${nnet3_affix}/extractor \
-        exp/nnet3${nnet3_affix}/ivectors_${datadir}_augment
+      # steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 8 \
+      #   data/${datadir}_augment exp/nnet3${nnet3_affix}/extractor \
+      #   exp/nnet3${nnet3_affix}/ivectors_${datadir}_augment
     done
 
+    #             --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_augment \
     rm $dir/.error 2>/dev/null || true
     for dset in dev test; do
         steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
             --acwt 1.0 --post-decode-acwt 10.0 \
-            --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_augment \
             --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \
             $dir/graph${decode_affix} data/${dset}_augment $dir/decode_${dset}${decode_affix}_augment || exit 1;
         # now rescore with G.carpa

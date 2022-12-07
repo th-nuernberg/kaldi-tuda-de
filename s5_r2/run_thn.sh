@@ -31,14 +31,15 @@ add_mailabs_data=true
 # Mozilla Common Voice: https://commonvoice.mozilla.org/en/datasets
 add_commonvoice_data=true
 # VoxPopuli: https://github.com/facebookresearch/voxpopuli
-add_voxpopuli_data=true
+add_voxpopuli_data=false
 # Multilingual LibriSpeech (MLS): https://www.openslr.org/94/
-add_mls_data=true
+add_mls_data=false
 
 # Turn on/off modifications to the original script
 fix_dict_dir=true
 add_data_augmentation=true
 with_specaugment=true
+with_ivec=false
 
 musan_root=/nfs/data/musan
 
@@ -974,12 +975,21 @@ fi
 if [ $stage -le 19 ]; then
   echo "Now running TDNN chain data preparation, i-vector training and TDNN-HMM training"
   echo ./local/run_tdnn_1f.sh --lang_dir ${lang_dir}
-  #     --stage 20 \
-  ./local/run_tdnn_1f.sh \
-    --with_specaugment $with_specaugment \
-    --lang_dir ${lang_dir} \
-    --nj $nJobs \
-    --decode_nj $nDecodeJobs
+    if [ "$with_ivec" = true ]; then
+      #     --stage 20 \
+      ./local/run_tdnn_1f.sh \
+        --with_specaugment $with_specaugment \
+        --lang_dir ${lang_dir} \
+        --nj $nJobs \
+        --decode_nj $nDecodeJobs
+    else
+      #     --stage 20 \
+      ./local/run_tdnn_1f_no_ivec.sh \
+        --with_specaugment $with_specaugment \
+        --lang_dir ${lang_dir} \
+        --nj $nJobs \
+        --decode_nj $nDecodeJobs
+    fi
 fi
 
 if [ $stage -le 20 ]; then
