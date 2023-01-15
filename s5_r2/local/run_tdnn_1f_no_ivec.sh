@@ -35,9 +35,9 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
 train_stage=-10
-# train_stage=13532
+# train_stage=3117
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
-decode_affix=v6 #if you want to to change decoding parameters and decode into a different directory
+decode_affix=v7 #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f
 common_egs_dir=  # you can set this to use previously dumped egs.
 
@@ -53,7 +53,7 @@ l2_regularize=0.00005
 proportional_shrink=20
 num_hidden=2048
 num_epochs=5
-with_specaugment=false
+with_specaugment=true
 test_augmented=true
 musan_root=/nfs/data/musan
 # Only for training with specaugment
@@ -63,7 +63,7 @@ lang_dir=data/lang_std_big_v6
 
 #lang_dir=data/lang_std_small_test
 
-tdnn_affix=1f_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
+tdnn_affix=1f_no_ivec_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
 if [ "$with_specaugment" = "true" ]; then
   echo "Using SpecAugment for model training"
   tdnn_affix=${tdnn_affix}_specaug
@@ -287,9 +287,7 @@ if [ $stage -le 18 ]; then
     --feat-dir $train_data_dir \
     --tree-dir $tree_dir \
     --lat-dir $lat_dir \
-    --dir $dir #\
- #   --egs.stage 100 \
- #   --stage 2374
+    --dir $dir 
     # Add this for restarting the training at a certain epoch, e.g. epoch 1542:
 #\
 #    --egs.stage 100 \

@@ -54,7 +54,7 @@ fi
 
 
 if [ $stage -le 1 ]; then
-  echo "$0: preparing directory for speed-perturbed data"
+  echo "$0: preparing directory for speed-perturbed data input: data/${train_set}"
   utils/data/perturb_data_dir_speed_3way.sh data/${train_set} data/${train_set}_sp
 fi
 
@@ -203,7 +203,7 @@ fi
 
 
 if [ $stage -le 8 ]; then
-  echo "$0: preparing directory for low-resolution speed-perturbed data (for alignment)"
+  echo "$0: preparing directory for low-resolution speed-perturbed data (for alignment); in: data/${train_set} out: data/${train_set}_sp"
   utils/data/perturb_data_dir_speed_3way.sh \
     data/${train_set} data/${train_set}_sp
 fi
