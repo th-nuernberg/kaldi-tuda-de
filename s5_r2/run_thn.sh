@@ -985,18 +985,26 @@ if [ $stage -le 19 ]; then
     else
       echo "WARNING: Will attempt running without i-vectors!"
       #     --stage 20 \
-      ./local/run_tdnn_1f_no_ivec.sh \
-        --with_specaugment $with_specaugment \
-        --lang_dir ${lang_dir} \
+      # Switch to Big UniHH Graph from https://ltdata1.informatik.uni-hamburg.de/kaldi_tuda_de/
+	  ./local/run_tdnn_1f_no_ivec_different_graph.sh \
+        --stage 20 \
+		--with_specaugment $with_specaugment \
+        --lang_dir ${lang_dir}_unihh \
         --nj $nJobs \
         --decode_nj $nDecodeJobs
+      # train without ivecs
+      #./local/run_tdnn_1f_no_ivec.sh \
+      #  --with_specaugment $with_specaugment \
+      #  --lang_dir ${lang_dir} \
+      #  --nj $nJobs \
+      #  --decode_nj $nDecodeJobs
     fi
 fi
 
 if [ $stage -le 20 ]; then
   echo "Now train RNNLM"
   # --stage 4 --train-stage 135
-  ./local/train_rnnlm.sh --stage 4 --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
+  ./local/train_rnnlm.sh --stage 4 --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
   # ./local/train_rnnlm.sh --stage 4
 fi
 

@@ -1,7 +1,8 @@
 #!/bin/bash
 
-exp=exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
-output_dir=mod9
+# exp=exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
+exp=exp/chain_cleaned/tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
+output_dir=swc_mailabs_cv9_voc900k_musan_specaug_big_g
 
 
 if [ -d "$output_dir" ]; then
@@ -58,8 +59,8 @@ md5_graph=($(md5sum $output_dir/graph/HCLG.fst.gz))
 
 cat <<EOF > $output_dir/metadata.json
 {
-  "date": "220115",
-  "description": "Robust German ASR model trained on SWC, M_AILABS, Tuda-De, CommonVoice V9 (2022-04-27). The vocabulary size is approximately 900k words. To increase noise robustness, SpecAugment layers were added to the AM architecture and the training data was augmented using MUSAN + RIRs noises. The model does not use iVectors. See https://github.com/uhh-lt/kaldi-tuda-de for further details.",
+  "date": "230120",
+  "description": "Robust German ASR model trained on SWC, M_AILABS, Tuda-De, CommonVoice V9 (2022-04-27). The vocabulary size is approximately 900k words. To increase noise robustness, SpecAugment layers were added to the AM architecture and the training data was augmented using MUSAN + RIRs noises. This model does NOT use iVectors. This model uses a prebuilt G.fst (from https://ltdata1.informatik.uni-hamburg.de/kaldi_tuda_de/). The G.fst is the same that is generated from the updated 140 million sentence LM (v6) of the official UniHH/Tuda implementation (lm_v6_voc900k). See https://github.com/uhh-lt/kaldi-tuda-de for further details.",
   "language": "de",
   "license": "Apache 2.0",
   "md5": {
