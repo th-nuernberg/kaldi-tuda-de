@@ -40,6 +40,8 @@ fix_dict_dir=true
 add_data_augmentation=true
 with_specaugment=true
 with_ivec=false
+# remove glottal stops and phrase accents from lexicon
+clean_lexicon=true
 
 musan_root=/nfs/data/musan
 
@@ -350,6 +352,11 @@ if [ $stage -le 3 ]; then
   #    echo "data/lexicon/train.txt">> data/lexicon_ids.txt
       echo "data/lexicon/de.txt">> data/lexicon_ids.txt
       echo "$extra_voc_file" >> data/lexicon_ids.txt
+
+      if [ "$clean_lexicon" = true ]; then
+        sed -i "s/'//g" data/lexicon/de.txt
+        sed -i 's/?//g' "$extra_voc_file"
+      fi
   fi
 
   if [ $use_BAS_dictionaries = true ] ; then
@@ -724,7 +731,7 @@ if [ $stage -le 9 ]; then
 
 	  if [ ! -f ${lm_dir}/pretrained_lm_de_may2020_v5.tar.gz ]
 	  then
-       	        wget --directory-prefix=${lm_dir}/  $kaldi_tuda_de_corpus_server/pretrained_lm_de_may2020_v5.tar.gz
+       	  wget --directory-prefix=${lm_dir}/  $kaldi_tuda_de_corpus_server/pretrained_lm_de_may2020_v5.tar.gz
 	  fi
 
 	  cd ${lm_dir}/
@@ -995,7 +1002,11 @@ fi
 if [ $stage -le 20 ]; then
   echo "Now train RNNLM"
   # --stage 4 --train-stage 135
-  # ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
-  ./local/train_rnnlm.sh --stage 4
+  if [ "$with_ivec" = true ]; then
+    ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
+  else
+  ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
+  fi
+  # ./local/train_rnnlm.sh --stage 4
 fi
 
