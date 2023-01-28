@@ -52,6 +52,6 @@ fi
 
 # export sequitur_g2p="/usr/local/bin/g2p.py"
 export sequitur_g2p="../../../venv/bin/g2p.py"
-
-export nJobs=28
+# default: 28
+export nJobs=64
 export nDecodeJobs=12

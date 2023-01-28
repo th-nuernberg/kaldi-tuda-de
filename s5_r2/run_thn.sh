@@ -40,6 +40,7 @@ fix_dict_dir=true
 add_data_augmentation=true
 with_specaugment=true
 with_ivec=false
+with_unihh_graph=true
 # remove glottal stops and phrase accents from lexicon
 clean_lexicon=true
 
@@ -990,12 +991,23 @@ if [ $stage -le 19 ]; then
         --nj $nJobs \
         --decode_nj $nDecodeJobs
     else
-      #     --stage 20 \
-      ./local/run_tdnn_1f_no_ivec.sh \
-        --with_specaugment $with_specaugment \
-        --lang_dir ${lang_dir} \
-        --nj $nJobs \
-        --decode_nj $nDecodeJobs
+      if [ "$with_unihh_graph" = true ]; then
+        echo "WARNING: Will attempt running without i-vectors!"
+        #     --stage 20 \
+        # Switch to Big UniHH Graph from https://ltdata1.informatik.uni-hamburg.de/kaldi_tuda_de/
+          ./local/run_tdnn_1f_no_ivec_different_graph.sh \
+            --with_specaugment $with_specaugment \
+            --lang_dir ${lang_dir}_unihh \
+            --nj $nJobs \
+            --decode_nj $nDecodeJobs
+        else
+            # train without ivecs
+          ./local/run_tdnn_1f_no_ivec.sh \
+            --with_specaugment $with_specaugment \
+            --lang_dir ${lang_dir} \
+            --nj $nJobs \
+            --decode_nj $nDecodeJobs
+      fi
     fi
 fi
 
@@ -1007,6 +1019,7 @@ if [ $stage -le 20 ]; then
   else
   ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
   fi
+  ./local/train_rnnlm.sh --stage 4 --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
   # ./local/train_rnnlm.sh --stage 4
 fi
 

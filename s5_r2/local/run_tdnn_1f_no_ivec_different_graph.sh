@@ -59,11 +59,12 @@ musan_root=/nfs/data/musan
 # Only for training with specaugment
 ivector_affine_opts="l2-regularize=0.03"
 
-lang_dir=data/lang_std_big_v6
+lang_dir=data/lang_std_big_v6_unihh
+lm_dir=data/local/lm_std_big_v6
 
 #lang_dir=data/lang_std_small_test
-
-tdnn_affix=1f_no_ivec_${num_hidden}  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
+# tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
+tdnn_affix=1f_no_ivec_${num_hidden}_unihh_graph  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
 if [ "$with_specaugment" = "true" ]; then
   echo "Using SpecAugment for model training"
   tdnn_affix=${tdnn_affix}_specaug
@@ -300,7 +301,14 @@ if [ $stage -le 19 ]; then
   # Note: it might appear that this data/lang_chain directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
+  # lang_std_big_v6_test_unihh
+  echo "WARNING: Using lang_dir $lang_dir _test"
   utils/mkgraph.sh --self-loop-scale 1.0 ${lang_dir}_test $dir $dir/graph${decode_affix}
+fi
+
+if [ $stage -le 20 ]; then
+  echo "Build const arpa LM for rescoring "
+  utils/build_const_arpa_lm.sh ${lm_dir}/4gram-mincount/lm_unpruned.gz ${lang_dir}_test ${lang_dir}_const_arpa
 fi
 
 # --acwt sets --acoustic-scale in nnet3-latgen-faster:
