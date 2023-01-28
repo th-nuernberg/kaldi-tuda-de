@@ -36,11 +36,11 @@ add_voxpopuli_data=false
 add_mls_data=false
 
 # Turn on/off modifications to the original script
-fix_dict_dir=true
+# fix_dict_dir=true
 add_data_augmentation=true
 with_specaugment=true
 with_ivec=false
-with_unihh_graph=true
+with_unihh_graph=false
 # remove glottal stops and phrase accents from lexicon
 clean_lexicon=true
 
@@ -1017,9 +1017,12 @@ if [ $stage -le 20 ]; then
   if [ "$with_ivec" = true ]; then
     ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_2048_specaug_sp_bi
   else
-  ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
+    if [ "$with_unihh_graph" = true ]; then
+        ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
+    else
+      ./local/train_rnnlm.sh --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi
+    fi
   fi
-  ./local/train_rnnlm.sh --stage 4 --ac-model-dir exp/chain_cleaned/tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
   # ./local/train_rnnlm.sh --stage 4
 fi
 
