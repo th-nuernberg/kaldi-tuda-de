@@ -31,9 +31,9 @@ add_mailabs_data=true
 # Mozilla Common Voice: https://commonvoice.mozilla.org/en/datasets
 add_commonvoice_data=true
 # VoxPopuli: https://github.com/facebookresearch/voxpopuli
-add_voxpopuli_data=false
+add_voxpopuli_data=true
 # Multilingual LibriSpeech (MLS): https://www.openslr.org/94/
-add_mls_data=false
+add_mls_data=true
 
 # Turn on/off modifications to the original script
 # fix_dict_dir=true
