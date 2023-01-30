@@ -355,8 +355,11 @@ if [ $stage -le 3 ]; then
       echo "$extra_voc_file" >> data/lexicon_ids.txt
 
       if [ "$clean_lexicon" = true ]; then
+        # remove glottal stops and phrase accents from lexicon
         sed -i "s/'//g" data/lexicon/de.txt
-        sed -i 's/?//g' "$extra_voc_file"
+        sed -i "s/'//g" $extra_voc_file
+        sed -i 's/?//g' data/lexicon/de.txt
+        sed -i 's/?//g' $extra_voc_file
       fi
   fi
 
