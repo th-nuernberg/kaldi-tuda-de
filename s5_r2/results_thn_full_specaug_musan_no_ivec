@@ -1,0 +1,12 @@
+%WER 12.77 [ 8528 / 66764, 1530 ins, 1021 del, 5977 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_devv7/wer_10_0.5
+%WER 10.90 [ 7278 / 66764, 1457 ins, 830 del, 4991 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_devv7_rescore/wer_10_0.5
+
+%WER 23.68 [ 63237 / 267056, 6659 ins, 17758 del, 38820 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_devv7_augment/wer_9_0.0
+%WER 20.83 [ 55625 / 267056, 5503 ins, 17883 del, 32239 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_devv7_augment_rescore/wer_10_0.0
+
+%WER 13.31 [ 9259 / 69568, 1507 ins, 1106 del, 6646 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_testv7/wer_11_0.5
+%WER 11.64 [ 8101 / 69568, 1466 ins, 910 del, 5725 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_testv7_rescore/wer_10_1.0
+
+%WER 24.33 [ 67706 / 278272, 6537 ins, 19634 del, 41535 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_testv7_augment/wer_10_0.0
+%WER 21.50 [ 59835 / 278272, 7017 ins, 15830 del, 36988 sub ] [PARTIAL] exp//chain_cleaned/tdnn1f_no_ivec_2048_specaug_sp_bi/decode_testv7_augment_rescore/wer_9_0.0
+

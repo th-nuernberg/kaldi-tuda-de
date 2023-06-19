@@ -12,8 +12,9 @@ if [ -f path.sh ]; then
 fi
 
 sil_prob=0.5
-# thn silphone from phones.txt
-silphone=sil
+# thn silphone from phones.txt (either usb when the default recipe is used or sil when the modified recipe is used)
+# silphone=sil
+silphone=usb
 thn_dir=data/lang_std_big_v6_test
 unihh_dir=data/lang_std_big_v6_unihh_test
 lexdir=/nfs/scratch/staff/wagnerdo/unihh_kaldi_model_files/de_900k_nnet3chain_tdnn1f_2048_sp_bi/phones
@@ -55,6 +56,7 @@ utils/make_lexicon_fst.pl $lexdir/lexicon.txt $sil_prob $silphone | \
 	fstcompile --isymbols=$thn_dir/phones.txt --osymbols=$unihh_dir/words.txt \
 	--keep_isymbols=false --keep_osymbols=false | \
 		fstarcsort --sort_type=olabel > $outdir/L.fst || exit 1;
+echo "Done making L.fst"
 
 # Create the lexicon FST with disambiguation symbols, and put it in lang_test.
 # There is an extra step where we create a loop to "pass through" the
@@ -67,6 +69,6 @@ utils/make_lexicon_fst.pl $outdir/lexicon_disambig.txt $sil_prob $silphone '#'$n
    --keep_isymbols=false --keep_osymbols=false |   \
    fstaddselfloops  "echo $phone_disambig_symbol |" "echo $word_disambig_symbol |" | \
    fstarcsort --sort_type=olabel > $outdir/L_disambig.fst || exit 1;
-
+echo "Done making L_disambig.fst"
 echo "Finished"
 exit 0

@@ -34,16 +34,16 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-train_stage=-10
-# train_stage=3117
+#train_stage=-10
+train_stage=10356
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 decode_affix=v7 #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f
 common_egs_dir=  # you can set this to use previously dumped egs.
 
 # how many GPU jobs to start in parallel
-num_jobs_initial=8
-num_jobs_final=8
+num_jobs_initial=6
+num_jobs_final=6
 
 # these variables influnce training outcomes
 # num_chunk_per_minibatch=128
@@ -263,7 +263,7 @@ if [ $stage -le 18 ]; then
 
 #     --egs.stage 100 \
 #     --feat.online-ivector-dir $train_ivector_dir \
- steps/nnet3/chain/train.py --stage $train_stage \
+ steps/nnet3/chain/train.py --stage $train_stage --egs.stage 100 \
     --cmd "$cuda_cmd" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \

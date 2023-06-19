@@ -42,8 +42,8 @@ decode_affix=v6 #if you want to to change decoding parameters and decode into a 
 common_egs_dir=  # you can set this to use previously dumped egs.
 
 # how many GPU jobs to start in parallel
-num_jobs_initial=3
-num_jobs_final=3
+num_jobs_initial=4
+num_jobs_final=4
 
 # these variables influnce training outcomes
 # num_chunk_per_minibatch=128
@@ -68,6 +68,7 @@ if [ "$with_specaugment" = "true" ]; then
   echo "Using SpecAugment for model training"
   tdnn_affix=${tdnn_affix}_specaug
 fi
+
 
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging

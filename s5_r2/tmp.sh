@@ -22,7 +22,7 @@
 # -e 'error', -u 'undefined variable', -o pipefail 'error in pipeline',
 set -euxo pipefail
 
-stage=0
+stage=19
 use_BAS_dictionaries=false
 # Spoken Wikipedia: https://nats.gitlab.io/swc/
 add_swc_data=true
@@ -40,7 +40,7 @@ add_mls_data=true
 add_data_augmentation=true
 with_specaugment=true
 with_ivec=false
-with_unihh_graph=false
+with_unihh_graph=true
 # remove glottal stops and phrase accents from lexicon
 clean_lexicon=true
 
@@ -1000,6 +1000,7 @@ if [ $stage -le 19 ]; then
           #     --stage 20 \
           # Switch to Big UniHH Graph from https://ltdata1.informatik.uni-hamburg.de/kaldi_tuda_de/
           ./local/run_tdnn_1f_no_ivec_different_graph.sh \
+            --stage 21 \
             --build_const_arpa false \
             --with_specaugment $with_specaugment \
             --lang_dir ${lang_dir}_unihh \

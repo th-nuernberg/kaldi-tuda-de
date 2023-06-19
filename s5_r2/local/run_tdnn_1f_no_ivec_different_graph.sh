@@ -37,7 +37,8 @@ nnet3_affix=_cleaned  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 train_stage=-10
 # train_stage=3117
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
-decode_affix=v7 #if you want to to change decoding parameters and decode into a different directory
+#decode_affix=v7 #if you want to to change decoding parameters and decode into a different directory
+decode_affix=_unihh_rescore #if you want to to change decoding parameters and decode into a different directory
 #tdnn_affix=1f
 common_egs_dir=  # you can set this to use previously dumped egs.
 
@@ -61,10 +62,13 @@ ivector_affine_opts="l2-regularize=0.03"
 
 lang_dir=data/lang_std_big_v6_unihh
 lm_dir=data/local/lm_std_big_v6
+# If you don't build it, you need to copy the const_arpa_dir from unihh manually
+build_const_arpa=true
 
 #lang_dir=data/lang_std_small_test
 # tdnn1f_no_ivec_2048_unihh_graph_specaug_sp_bi
 tdnn_affix=1f_no_ivec_${num_hidden}_unihh_graph  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
+# tdnn_affix=1f_no_ivec_${num_hidden} #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
 if [ "$with_specaugment" = "true" ]; then
   echo "Using SpecAugment for model training"
   tdnn_affix=${tdnn_affix}_specaug
@@ -302,13 +306,15 @@ if [ $stage -le 19 ]; then
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
   # lang_std_big_v6_test_unihh
-  echo "WARNING: Using lang_dir $lang_dir _test"
+  echo "WARNING: Using lang_dir ${lang_dir}_test"
   utils/mkgraph.sh --self-loop-scale 1.0 ${lang_dir}_test $dir $dir/graph${decode_affix}
 fi
 
 if [ $stage -le 20 ]; then
-  echo "Build const arpa LM for rescoring "
-  utils/build_const_arpa_lm.sh ${lm_dir}/4gram-mincount/lm_unpruned.gz ${lang_dir}_test ${lang_dir}_const_arpa
+  if [ "$build_const_arpa" = "true" ]; then
+    echo "Build const arpa LM for rescoring "
+    utils/build_const_arpa_lm.sh ${lm_dir}/4gram-mincount/lm_unpruned.gz ${lang_dir}_test ${lang_dir}_const_arpa
+  fi
 fi
 
 # --acwt sets --acoustic-scale in nnet3-latgen-faster:
@@ -318,14 +324,14 @@ fi
 # --acoustic-scale            : Scaling factor for acoustic likelihoods (float, default = 1)
 
 #           --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${dset}_hires \
-if [ $stage -le 20 ]; then
+if [ $stage -le 21 ]; then
   rm $dir/.error 2>/dev/null || true
   for dset in dev test; do
       
-      steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
-          --acwt 1.0 --post-decode-acwt 10.0 \
-          --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \
-         $dir/graph${decode_affix} data/${dset}_hires $dir/decode_${dset}${decode_affix} || exit 1;
+      # steps/nnet3/decode.sh --num-threads 4 --nj $decode_nj --cmd "$decode_cmd" \
+      #     --acwt 1.0 --post-decode-acwt 10.0 \
+      #     --scoring-opts "--min-lmwt 5 --ref-filtering-cmd local/wer_ref_filter --hyp-filtering-cmd local/wer_hyp_filter" \
+      #    $dir/graph${decode_affix} data/${dset}_hires $dir/decode_${dset}${decode_affix} || exit 1;
       # now rescore with G.carpa
       steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" ${lang_dir}_test ${lang_dir}_const_arpa/ \
         data/${dset}_hires ${dir}/decode_${dset}${decode_affix} ${dir}/decode_${dset}${decode_affix}_rescore || exit 1;
@@ -337,7 +343,7 @@ if [ $stage -le 20 ]; then
 fi
 
 
-if [ $stage -le 21 ]; then
+if [ $stage -le 22 ]; then
   if [ "$test_augmented" = true ]; then
     echo "$0: Begin data augmentation"
     # Copy utt2numframes and feats.scp from dumpdir to train_dir
